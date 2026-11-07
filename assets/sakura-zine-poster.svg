@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1280" viewBox="0 0 768 1280">
+  <defs>
+    <filter id="paper" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="3" seed="8" result="noise"/>
+      <feColorMatrix in="noise" values="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 .10 0"/>
+      <feBlend in="SourceGraphic" mode="multiply"/>
+    </filter>
+    <filter id="ink">
+      <feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.4"/>
+    </filter>
+    <radialGradient id="bloom" cx="50%" cy="45%" r="55%">
+      <stop offset="0" stop-color="#f4a8a2"/>
+      <stop offset="1" stop-color="#df574f"/>
+    </radialGradient>
+  </defs>
+  <g filter="url(#paper)">
+    <rect width="768" height="1280" fill="#f1eadc"/>
+    <path d="M0 1080C120 1040 230 1090 350 1110C500 1138 620 1070 768 1095V1280H0Z" fill="#d9d2c3" opacity=".35"/>
+    <g fill="none" stroke="#44382f" stroke-linecap="round" stroke-linejoin="round" filter="url(#ink)">
+      <path d="M404 1112C413 984 424 846 431 702C435 623 426 560 407 505" stroke-width="38"/>
+      <path d="M426 802C349 727 300 642 276 538C258 459 216 406 168 363" stroke-width="20"/>
+      <path d="M431 693C483 579 552 496 635 424" stroke-width="22"/>
+      <path d="M425 743C526 698 606 665 688 680" stroke-width="18"/>
+      <path d="M401 532C340 469 290 438 219 428" stroke-width="15"/>
+      <path d="M413 551C458 478 501 420 521 347" stroke-width="14"/>
+      <path d="M308 580C262 547 219 532 167 537" stroke-width="10"/>
+      <path d="M484 573C541 536 581 491 611 435" stroke-width="10"/>
+      <path d="M350 689C292 656 238 651 180 668" stroke-width="9"/>
+      <path d="M525 691C578 707 620 748 652 798" stroke-width="11"/>
+      <path d="M521 347C537 307 566 278 603 251" stroke-width="8"/>
+      <path d="M276 538C265 497 242 462 205 434" stroke-width="8"/>
+      <path d="M635 424C660 380 687 347 720 320" stroke-width="8"/>
+      <path d="M688 680C720 650 738 617 747 579" stroke-width="7"/>
+      <path d="M216 406C196 373 173 354 145 338" stroke-width="7"/>
+      <path d="M611 435C635 400 647 365 645 330" stroke-width="7"/>
+    </g>
+    <g id="blossoms">
+      <g fill="url(#bloom)" opacity=".94">
+        <circle cx="168" cy="363" r="12"/><circle cx="205" cy="434" r="10"/>
+        <circle cx="242" cy="462" r="13"/><circle cx="276" cy="538" r="11"/>
+        <circle cx="219" cy="428" r="9"/><circle cx="308" cy="580" r="12"/>
+        <circle cx="350" cy="689" r="10"/><circle cx="407" cy="505" r="13"/>
+        <circle cx="458" cy="478" r="10"/><circle cx="521" cy="347" r="14"/>
+        <circle cx="603" cy="251" r="12"/><circle cx="635" cy="424" r="13"/>
+        <circle cx="688" cy="680" r="11"/><circle cx="611" cy="435" r="9"/>
+        <circle cx="645" cy="330" r="12"/><circle cx="720" cy="320" r="9"/>
+        <circle cx="484" cy="573" r="10"/><circle cx="525" cy="691" r="10"/>
+        <circle cx="652" cy="798" r="9"/><circle cx="180" cy="668" r="10"/>
+        <circle cx="390" cy="585" r="16"/><circle cx="444" cy="620" r="12"/>
+        <circle cx="540" cy="530" r="15"/><circle cx="590" cy="565" r="11"/>
+      </g>
+      <g fill="#efa39d" opacity=".8">
+        <circle cx="193" cy="392" r="7"/><circle cx="231" cy="485" r="8"/>
+        <circle cx="287" cy="505" r="7"/><circle cx="336" cy="621" r="7"/>
+        <circle cx="382" cy="665" r="8"/><circle cx="478" cy="526" r="7"/>
+        <circle cx="552" cy="476" r="8"/><circle cx="621" cy="476" r="7"/>
+        <circle cx="668" cy="525" r="7"/><circle cx="690" cy="611" r="8"/>
+        <circle cx="573" cy="643" r="7"/><circle cx="462" cy="738" r="7"/>
+        <circle cx="397" cy="766" r="7"/><circle cx="330" cy="749" r="7"/>
+      </g>
+    </g>
+    <g fill="#df5e56" opacity=".8">
+      <path d="M120 790c10-9 22 3 13 13-8 8-22-2-13-13Z"/>
+      <path d="M601 842c11-10 25 3 14 14-9 9-24-2-14-14Z"/>
+      <path d="M310 911c9-8 21 2 12 12-8 8-21-2-12-12Z"/>
+      <path d="M704 737c9-8 20 2 11 12-7 7-20-2-11-12Z"/>
+    </g>
+    <text x="55" y="1170" fill="#3e3730" font-family="Songti SC, STSong, serif" font-size="26" letter-spacing="3">日日 · 一天一瓣</text>
+    <path d="M55 1191H222" stroke="#df5e56" stroke-width="2"/>
+    <text x="56" y="1224" fill="#8e8376" font-family="Courier New, monospace" font-size="11" letter-spacing="2">DAY BY DAY / ONE PETAL</text>
+  </g>
+</svg>
