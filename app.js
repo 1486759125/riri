@@ -10,6 +10,83 @@ const PRIORITIES = {
   gray: { label: "稍后", order: 3, description: "有空再做" },
 };
 const LIST_COLORS = ["#e8b88b", "#91ad95", "#d99180", "#8da9bd", "#c3a7c7"];
+const SAKURA_STAGES = [
+  {
+    min: 0,
+    name: "初生树苗",
+    description: "一棵刚刚抽枝的小树",
+    scale: 0.34,
+    nextLabel: "再完成 {left} 项开始生长",
+  },
+  {
+    min: 30,
+    name: "抽枝小树",
+    description: "枝叶正在向光生长",
+    scale: 0.5,
+    nextLabel: "再完成 {left} 项长出新枝",
+  },
+  {
+    min: 90,
+    name: "含苞树影",
+    description: "树上已经藏满细小的花苞",
+    scale: 0.68,
+    nextLabel: "再完成 {left} 项等待花开",
+  },
+  {
+    min: 180,
+    name: "盛开樱树",
+    description: "认真生活的日子，正开成花",
+    scale: 0.84,
+    nextLabel: "再完成 {left} 项让树冠更丰盛",
+  },
+  {
+    min: 320,
+    name: "满庭花冠",
+    description: "你的樱花树已经长成一片春天",
+    scale: 1,
+    nextLabel: "继续记录，花会一直开",
+  },
+];
+const BLOSSOM_ANCHORS = [
+  [354, 99],
+  [374, 126],
+  [389, 135],
+  [411, 146],
+  [425, 171],
+  [443, 174],
+  [456, 188],
+  [472, 176],
+  [492, 183],
+  [506, 160],
+  [520, 140],
+  [529, 117],
+  [545, 105],
+  [558, 100],
+  [574, 128],
+  [590, 146],
+  [607, 162],
+  [622, 146],
+  [638, 128],
+  [652, 111],
+  [665, 105],
+  [681, 94],
+  [698, 82],
+  [430, 266],
+  [450, 250],
+  [488, 237],
+  [523, 225],
+  [557, 219],
+  [586, 232],
+  [603, 240],
+  [625, 255],
+  [506, 198],
+  [524, 205],
+  [548, 193],
+  [574, 184],
+  [518, 239],
+  [548, 250],
+  [579, 264],
+];
 
 const elements = {
   headerDate: document.querySelector("#headerDate"),
@@ -31,6 +108,7 @@ const elements = {
   sidebarQuoteText: document.querySelector("#sidebarQuoteText"),
   sidebarQuoteSource: document.querySelector("#sidebarQuoteSource"),
   editQuoteButton: document.querySelector("#editQuoteButton"),
+  soundToggle: document.querySelector("#soundToggle"),
   viewNav: document.querySelector("#viewNav"),
   viewButtons: Array.from(document.querySelectorAll("[data-view]")),
   todayViewCount: document.querySelector("#todayViewCount"),
@@ -52,6 +130,25 @@ const elements = {
   moodLabel: document.querySelector("#moodLabel"),
   moodTitle: document.querySelector("#moodTitle"),
   moodMessage: document.querySelector("#moodMessage"),
+  sakuraGarden: document.querySelector(".sakura-garden"),
+  sakuraArt: document.querySelector("#sakuraArt"),
+  sakuraTreePosition: document.querySelector("#sakuraTreePosition"),
+  sakuraDashboard: document.querySelector(".sakura-dashboard"),
+  sakuraSkyNote: document.querySelector("#sakuraSkyNote"),
+  sakuraTreeGroup: document.querySelector("#sakuraTreeGroup"),
+  sakuraBlossoms: document.querySelector("#sakuraBlossoms"),
+  sakuraFalling: document.querySelector("#sakuraFalling"),
+  sakuraStageLabel: document.querySelector("#sakuraStageLabel"),
+  sakuraCheckin: document.querySelector("#sakuraCheckin"),
+  sakuraPetals: document.querySelector("#sakuraPetals"),
+  sakuraStreak: document.querySelector("#sakuraStreak"),
+  sakuraStageName: document.querySelector("#sakuraStageName"),
+  sakuraNextStage: document.querySelector("#sakuraNextStage"),
+  sakuraGrowthTrack: document.querySelector("#sakuraGrowthTrack"),
+  sakuraGrowthFill: document.querySelector("#sakuraGrowthFill"),
+  sakuraCompletedCount: document.querySelector("#sakuraCompletedCount"),
+  sakuraBestStreak: document.querySelector("#sakuraBestStreak"),
+  sakuraWhisper: document.querySelector("#sakuraWhisper"),
   taskForm: document.querySelector("#taskForm"),
   taskInput: document.querySelector("#taskInput"),
   composerTarget: document.querySelector("#composerTarget"),
@@ -67,6 +164,10 @@ const elements = {
   visibleSummary: document.querySelector("#visibleSummary"),
   filterButtons: Array.from(document.querySelectorAll("[data-filter]")),
   sidebar: document.querySelector("#sidebar"),
+  taskWorkspace: document.querySelector("#taskWorkspace"),
+  sakuraTab: document.querySelector("#sakuraTab"),
+  tasksTab: document.querySelector("#tasksTab"),
+  sakuraPanelClose: document.querySelector("#sakuraPanelClose"),
   sidebarBackdrop: document.querySelector("#sidebarBackdrop"),
   mobileMenuButton: document.querySelector("#mobileMenuButton"),
   sidebarClose: document.querySelector("#sidebarClose"),
@@ -125,6 +226,289 @@ let sidebarDragState = null;
 let deferredInstallPrompt = null;
 let confirmAction = null;
 let lastFocusedElement = null;
+let soundContext = null;
+let renderedSakuraPetals = null;
+let renderedSakuraStage = null;
+let activeAppTab = "tree";
+let treeStatusOpen = false;
+
+const SOUND_PATTERNS = {
+  viewToday: {
+    volume: 0.035,
+    notes: [
+      [523.25, 0, 0.2],
+      [659.25, 0.075, 0.24],
+    ],
+  },
+  viewHistory: {
+    volume: 0.032,
+    notes: [
+      [440, 0, 0.22],
+      [392, 0.11, 0.27],
+    ],
+  },
+  viewFuture: {
+    volume: 0.034,
+    notes: [
+      [523.25, 0, 0.18],
+      [659.25, 0.065, 0.18],
+      [783.99, 0.13, 0.27],
+    ],
+  },
+  filterAll: {
+    volume: 0.03,
+    notes: [
+      [349.23, 0, 0.17],
+      [392, 0.065, 0.2],
+    ],
+  },
+  filterPending: {
+    volume: 0.03,
+    notes: [
+      [440, 0, 0.17],
+      [554.37, 0.065, 0.2],
+    ],
+  },
+  filterDone: {
+    volume: 0.03,
+    notes: [
+      [587.33, 0, 0.17],
+      [698.46, 0.065, 0.21],
+    ],
+  },
+  taskAdded: {
+    volume: 0.036,
+    notes: [
+      [523.25, 0, 0.16],
+      [659.25, 0.055, 0.17],
+      [783.99, 0.11, 0.22],
+    ],
+  },
+  taskDone: {
+    volume: 0.036,
+    notes: [
+      [659.25, 0, 0.17],
+      [783.99, 0.065, 0.18],
+      [880, 0.13, 0.25],
+    ],
+  },
+  taskSkipped: {
+    volume: 0.028,
+    notes: [
+      [392, 0, 0.18],
+      [329.63, 0.08, 0.24],
+    ],
+  },
+  taskDeleted: {
+    volume: 0.027,
+    notes: [
+      [440, 0, 0.17],
+      [349.23, 0.075, 0.22],
+    ],
+  },
+  dateChanged: {
+    volume: 0.03,
+    notes: [
+      [493.88, 0, 0.16],
+      [587.33, 0.06, 0.2],
+    ],
+  },
+  toggleOn: {
+    volume: 0.034,
+    notes: [
+      [523.25, 0, 0.16],
+      [783.99, 0.07, 0.23],
+    ],
+  },
+  toggleOff: {
+    volume: 0.025,
+    notes: [
+      [440, 0, 0.15],
+      [349.23, 0.065, 0.2],
+    ],
+  },
+  sakuraBloom: {
+    volume: 0.03,
+    notes: [
+      [659.25, 0, 0.18],
+      [783.99, 0.075, 0.2],
+      [987.77, 0.15, 0.28],
+    ],
+  },
+  petalsFall: {
+    volume: 0.024,
+    notes: [
+      [440, 0, 0.18],
+      [369.99, 0.09, 0.22],
+      [293.66, 0.18, 0.28],
+    ],
+  },
+};
+
+const LIST_TAB_FREQUENCIES = [
+  329.63, 369.99, 392, 440, 493.88, 523.25, 587.33,
+];
+const FILTER_TAB_SOUNDS = {
+  all: "filterAll",
+  pending: "filterPending",
+  done: "filterDone",
+};
+
+function getSoundContext() {
+  if (soundContext) return soundContext;
+  const AudioContextClass =
+    window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  soundContext = new AudioContextClass();
+  return soundContext;
+}
+
+function playSoftTones(notes, volume = 0.032) {
+  if (!state.soundEnabled) return;
+  const context = getSoundContext();
+  if (!context) return;
+  if (context.state === "suspended") {
+    context.resume().catch(() => {});
+  }
+
+  const startTime = context.currentTime + 0.012;
+  const filter = context.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(2600, startTime);
+  filter.Q.setValueAtTime(0.55, startTime);
+  filter.connect(context.destination);
+
+  notes.forEach(([frequency, delay, duration]) => {
+    const toneStart = startTime + delay;
+    const toneEnd = toneStart + duration;
+    const mainGain = context.createGain();
+    const mainOscillator = context.createOscillator();
+    const shimmerGain = context.createGain();
+    const shimmerOscillator = context.createOscillator();
+
+    mainOscillator.type = "sine";
+    mainOscillator.frequency.setValueAtTime(frequency, toneStart);
+    mainGain.gain.setValueAtTime(0.0001, toneStart);
+    mainGain.gain.exponentialRampToValueAtTime(volume, toneStart + 0.018);
+    mainGain.gain.exponentialRampToValueAtTime(0.0001, toneEnd);
+    mainOscillator.connect(mainGain).connect(filter);
+
+    shimmerOscillator.type = "sine";
+    shimmerOscillator.frequency.setValueAtTime(frequency * 2.005, toneStart);
+    shimmerGain.gain.setValueAtTime(0.0001, toneStart);
+    shimmerGain.gain.exponentialRampToValueAtTime(
+      volume * 0.12,
+      toneStart + 0.016,
+    );
+    shimmerGain.gain.exponentialRampToValueAtTime(0.0001, toneEnd);
+    shimmerOscillator.connect(shimmerGain).connect(filter);
+
+    mainOscillator.start(toneStart);
+    shimmerOscillator.start(toneStart);
+    mainOscillator.stop(toneEnd + 0.03);
+    shimmerOscillator.stop(toneEnd + 0.03);
+  });
+}
+
+function playSound(name) {
+  const pattern = SOUND_PATTERNS[name];
+  if (!pattern) return;
+  playSoftTones(pattern.notes, pattern.volume);
+}
+
+function playListTabSound(listId) {
+  const listIndex = Math.max(
+    0,
+    state.lists.findIndex((list) => list.id === listId),
+  );
+  const rootFrequency =
+    LIST_TAB_FREQUENCIES[listIndex % LIST_TAB_FREQUENCIES.length];
+  playSoftTones(
+    [
+      [rootFrequency, 0, 0.18],
+      [rootFrequency * 1.25, 0.07, 0.23],
+    ],
+    0.03,
+  );
+}
+
+function playPrioritySound(priority) {
+  const frequencies = {
+    red: 349.23,
+    orange: 392,
+    green: 466.16,
+    gray: 392,
+  };
+  const frequency = frequencies[priority] || 440;
+  playSoftTones(
+    [
+      [frequency, 0, 0.16],
+      [frequency * 1.12, 0.06, 0.2],
+    ],
+    0.028,
+  );
+}
+
+function renderSoundControl() {
+  const enabled = state.soundEnabled !== false;
+  elements.soundToggle.setAttribute("aria-pressed", String(enabled));
+  elements.soundToggle.setAttribute(
+    "aria-label",
+    enabled ? "关闭界面音效" : "开启界面音效",
+  );
+  elements.soundToggle.title = enabled ? "界面音效已开启" : "界面音效已关闭";
+}
+
+function renderAppTabs() {
+  const isTree = activeAppTab === "tree";
+  document.body.classList.toggle("app-mode-tree", isTree);
+  document.body.classList.toggle("app-mode-tasks", !isTree);
+  document.body.classList.toggle(
+    "tree-status-open",
+    isTree && treeStatusOpen,
+  );
+  elements.sakuraTab.classList.toggle("is-active", isTree);
+  elements.tasksTab.classList.toggle("is-active", !isTree);
+  elements.sakuraTab.setAttribute("aria-selected", String(isTree));
+  elements.tasksTab.setAttribute("aria-selected", String(!isTree));
+  elements.sakuraTab.setAttribute(
+    "aria-expanded",
+    String(isTree && treeStatusOpen),
+  );
+  elements.taskWorkspace.setAttribute("aria-hidden", String(isTree));
+  elements.sakuraGarden.setAttribute("aria-hidden", String(!isTree));
+  elements.sakuraDashboard.setAttribute(
+    "aria-hidden",
+    String(!isTree || !treeStatusOpen),
+  );
+  elements.sakuraSkyNote.setAttribute(
+    "aria-hidden",
+    String(!isTree || !treeStatusOpen),
+  );
+  document.title = isTree ? "日日 · 我的樱花树" : "日日 · 今日清单";
+}
+
+function setAppTab(tab) {
+  if (tab === "tree") {
+    const wasAlreadyOnTree = activeAppTab === "tree";
+    activeAppTab = "tree";
+    treeStatusOpen = wasAlreadyOnTree ? !treeStatusOpen : true;
+    playSound("sakuraBloom");
+  } else {
+    activeAppTab = "tasks";
+    treeStatusOpen = false;
+    playSound("viewToday");
+  }
+  closePriorityMenu();
+  renderAppTabs();
+  renderSakuraGarden();
+  if (tab === "tasks") {
+    window.setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      elements.taskInput.focus({ preventScroll: true });
+    }, 80);
+  }
+}
 
 function uid(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -169,48 +553,52 @@ function createTask(
 }
 
 function createInitialState() {
+  const lists = [
+    {
+      id: "today",
+      name: "今日清单",
+      color: LIST_COLORS[0],
+      tasks: [
+        createTask("完成产品需求梳理", "red", "done"),
+        createTask("阅读 30 分钟", "orange", "done"),
+        createTask("回复两封重要邮件", "orange", "done"),
+        createTask("晚间拉伸 15 分钟", "green", "skipped"),
+        createTask("整理本周照片", "gray", "pending"),
+      ],
+    },
+    {
+      id: "growth",
+      name: "工作与成长",
+      color: LIST_COLORS[1],
+      tasks: [
+        createTask("整理项目周报", "orange", "pending"),
+        createTask("学习一个设计案例", "green", "done"),
+      ],
+    },
+    {
+      id: "life",
+      name: "生活日常",
+      color: LIST_COLORS[2],
+      tasks: [
+        createTask("给植物浇水", "green", "pending"),
+        createTask("采购本周食材", "orange", "pending"),
+      ],
+    },
+  ];
+
   return {
     activeListId: "today",
     quote: {
       mode: "default",
       text: DEFAULT_QUOTE,
     },
+    soundEnabled: true,
     sidebarUi: {
       listHeight: null,
       listCollapsed: false,
     },
-    lists: [
-      {
-        id: "today",
-        name: "今日清单",
-        color: LIST_COLORS[0],
-        tasks: [
-          createTask("完成产品需求梳理", "red", "done"),
-          createTask("阅读 30 分钟", "orange", "done"),
-          createTask("回复两封重要邮件", "orange", "done"),
-          createTask("晚间拉伸 15 分钟", "green", "skipped"),
-          createTask("整理本周照片", "gray", "pending"),
-        ],
-      },
-      {
-        id: "growth",
-        name: "工作与成长",
-        color: LIST_COLORS[1],
-        tasks: [
-          createTask("整理项目周报", "orange", "pending"),
-          createTask("学习一个设计案例", "green", "done"),
-        ],
-      },
-      {
-        id: "life",
-        name: "生活日常",
-        color: LIST_COLORS[2],
-        tasks: [
-          createTask("给植物浇水", "green", "pending"),
-          createTask("采购本周食材", "orange", "pending"),
-        ],
-      },
-    ],
+    garden: deriveGardenFromTasks(lists),
+    lists,
   };
 }
 
@@ -256,6 +644,7 @@ function loadState() {
             ? saved.quote.text.trim()
             : DEFAULT_QUOTE,
       },
+      soundEnabled: saved.soundEnabled !== false,
       sidebarUi: {
         listHeight:
           Number(saved.sidebarUi?.listHeight) > 0
@@ -263,6 +652,7 @@ function loadState() {
             : null,
         listCollapsed: Boolean(saved.sidebarUi?.listCollapsed),
       },
+      garden: normalizeGarden(saved.garden, lists),
       activeListId: lists.some((list) => list.id === saved.activeListId)
         ? saved.activeListId
         : lists[0].id,
@@ -271,6 +661,152 @@ function loadState() {
     console.warn("无法读取本地清单，已载入示例数据。", error);
     return createInitialState();
   }
+}
+
+function deriveGardenFromTasks(lists) {
+  const today = localDateKey();
+  const doneTasks = lists
+    .flatMap((list) => list.tasks)
+    .filter((task) => task.status === "done" && task.date <= today);
+  const activeDates = [...new Set(doneTasks.map((task) => task.date))].sort();
+  const latestDate = activeDates.length
+    ? activeDates[activeDates.length - 1]
+    : null;
+  let streak = 0;
+  if (latestDate === today || latestDate === shiftDateKey(today, -1)) {
+    let cursor = latestDate;
+    const dateSet = new Set(activeDates);
+    while (dateSet.has(cursor)) {
+      streak += 1;
+      cursor = shiftDateKey(cursor, -1);
+    }
+  }
+  return {
+    streak,
+    bestStreak: streak,
+    petals: activeDates.length,
+    growthPoints: doneTasks.length * 10,
+    completedTasks: doneTasks.length,
+    awardedTaskIds: doneTasks.map((task) => task.id),
+    lastCareDate: latestDate,
+    penaltyProcessedThrough: today,
+    missedDays: 0,
+    lastPenalty: 0,
+    lastPenaltyDate: null,
+    creationDate: today,
+    creationCount: 0,
+  };
+}
+
+function normalizeGarden(savedGarden, lists) {
+  if (!savedGarden || typeof savedGarden !== "object") {
+    return deriveGardenFromTasks(lists);
+  }
+  const numberOrZero = (value) => {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, Math.round(number)) : 0;
+  };
+  return {
+    streak: numberOrZero(savedGarden.streak),
+    bestStreak: numberOrZero(savedGarden.bestStreak),
+    petals: numberOrZero(savedGarden.petals),
+    growthPoints: numberOrZero(savedGarden.growthPoints),
+    completedTasks: numberOrZero(savedGarden.completedTasks),
+    awardedTaskIds: Array.isArray(savedGarden.awardedTaskIds)
+      ? [...new Set(savedGarden.awardedTaskIds.filter((id) => typeof id === "string"))]
+      : [],
+    lastCareDate: isValidDateKey(savedGarden.lastCareDate)
+      ? savedGarden.lastCareDate
+      : null,
+    penaltyProcessedThrough: isValidDateKey(
+      savedGarden.penaltyProcessedThrough,
+    )
+      ? savedGarden.penaltyProcessedThrough
+      : localDateKey(),
+    missedDays: numberOrZero(savedGarden.missedDays),
+    lastPenalty: numberOrZero(savedGarden.lastPenalty),
+    lastPenaltyDate: isValidDateKey(savedGarden.lastPenaltyDate)
+      ? savedGarden.lastPenaltyDate
+      : null,
+    creationDate: isValidDateKey(savedGarden.creationDate)
+      ? savedGarden.creationDate
+      : localDateKey(),
+    creationCount: numberOrZero(savedGarden.creationCount),
+  };
+}
+
+function dateDifference(laterDate, earlierDate) {
+  return Math.round(
+    (parseDateKey(laterDate) - parseDateKey(earlierDate)) / 86400000,
+  );
+}
+
+function reconcileGardenPenalties() {
+  const garden = state.garden;
+  if (!garden) return 0;
+  const today = localDateKey();
+  const yesterday = shiftDateKey(today, -1);
+  const lastProcessed =
+    garden.penaltyProcessedThrough || garden.lastCareDate || yesterday;
+  const firstMissedDate = shiftDateKey(lastProcessed, 1);
+  if (firstMissedDate > yesterday) return 0;
+
+  const missedDays = dateDifference(yesterday, firstMissedDate) + 1;
+  if (missedDays <= 0) return 0;
+  const penalty = missedDays * 10;
+  garden.petals = Math.max(0, garden.petals - penalty);
+  garden.streak = 0;
+  garden.missedDays += missedDays;
+  garden.lastPenalty = penalty;
+  garden.lastPenaltyDate = yesterday;
+  garden.penaltyProcessedThrough = yesterday;
+  return penalty;
+}
+
+function getSakuraStage(growthPoints) {
+  let index = 0;
+  SAKURA_STAGES.forEach((stage, stageIndex) => {
+    if (growthPoints >= stage.min) index = stageIndex;
+  });
+  return { stage: SAKURA_STAGES[index], index };
+}
+
+function recordGardenCompletion(task) {
+  const garden = state.garden;
+  const priorPenalty = reconcileGardenPenalties();
+  const isNewCompletion = !garden.awardedTaskIds.includes(task.id);
+  if (isNewCompletion) {
+    garden.awardedTaskIds.push(task.id);
+    garden.growthPoints += 12;
+    garden.completedTasks += 1;
+  }
+
+  const today = localDateKey();
+  let newPetal = false;
+  if (garden.lastCareDate !== today) {
+    garden.streak =
+      garden.lastCareDate === shiftDateKey(today, -1)
+        ? garden.streak + 1
+        : 1;
+    garden.bestStreak = Math.max(garden.bestStreak, garden.streak);
+    garden.petals += 1;
+    garden.lastCareDate = today;
+    newPetal = true;
+  }
+  return { priorPenalty, isNewCompletion, newPetal };
+}
+
+function recordGardenTaskCreated() {
+  const garden = state.garden;
+  const today = localDateKey();
+  if (garden.creationDate !== today) {
+    garden.creationDate = today;
+    garden.creationCount = 0;
+  }
+  if (garden.creationCount >= 3) return 0;
+  garden.creationCount += 1;
+  garden.growthPoints += 4;
+  return 4;
 }
 
 function saveState() {
@@ -479,12 +1015,15 @@ function moodFor(percent) {
 function render() {
   renderDate();
   renderQuote();
+  renderSoundControl();
+  renderAppTabs();
   renderSidebar();
   renderSidebarLayout();
   renderViewNavigation();
   renderDateRail();
   renderWorkspaceHeader();
   renderProgress();
+  renderSakuraGarden();
   renderComposerState();
   renderTasks();
   renderFilterControls();
@@ -739,7 +1278,7 @@ function renderWorkspaceHeader() {
   const scopedTasks = getScopedTasks();
 
   if (currentView === "history") {
-    elements.activeListOverline.textContent = "HISTORY RECORD";
+    elements.activeListOverline.textContent = "历史存档";
     elements.activeListTitle.textContent = "历史记录";
     elements.activeListSubtitle.textContent = `${selected.fullDate} · ${
       scopedTasks.length
@@ -750,7 +1289,7 @@ function renderWorkspaceHeader() {
   }
 
   if (currentView === "future") {
-    elements.activeListOverline.textContent = "FUTURE PLAN";
+    elements.activeListOverline.textContent = "未来安排";
     elements.activeListTitle.textContent = "未来计划";
     elements.activeListSubtitle.textContent = `${selected.fullDate} · ${
       scopedTasks.length
@@ -761,7 +1300,7 @@ function renderWorkspaceHeader() {
   }
 
   elements.activeListOverline.textContent =
-    list.id === "today" ? "MY DAY" : "MY LIST";
+    list.id === "today" ? "今天的一页" : "我的清单";
   elements.activeListTitle.textContent = list.name;
   elements.activeListSubtitle.textContent =
     list.tasks.length > 0
@@ -782,10 +1321,10 @@ function renderProgress() {
 
   elements.progressKicker.textContent =
     currentView === "today"
-      ? "TODAY'S PROGRESS"
+      ? "今日进度"
       : currentView === "history"
-        ? "HISTORY PROGRESS"
-        : "PLAN PROGRESS";
+        ? "历史进度"
+        : "计划进度";
   elements.progressHeading.textContent = `${scopeLabel} · 完成进度`;
   elements.progressPercent.textContent = progress.percent;
   elements.progressCaption.textContent = progress.total
@@ -820,6 +1359,166 @@ function renderProgress() {
   elements.moodCard.dataset.mood = mood.type;
   elements.moodTitle.textContent = mood.title;
   elements.moodMessage.textContent = mood.message;
+}
+
+function renderSakuraBlossoms(petalCount) {
+  const visibleCount = Math.min(petalCount, 96);
+  const colors = ["#d98287", "#e8a6a4", "#f2c3bb", "#dda09d", "#f6d8cd"];
+  const blossoms = [];
+  for (let index = 0; index < visibleCount; index += 1) {
+    const anchor = BLOSSOM_ANCHORS[index % BLOSSOM_ANCHORS.length];
+    const layer = Math.floor(index / BLOSSOM_ANCHORS.length);
+    const angle = ((index * 137.5 + layer * 31) * Math.PI) / 180;
+    const radius = layer === 0 ? 0 : 5 + (layer % 4) * 3.5;
+    const x = anchor[0] + Math.cos(angle) * radius;
+    const y = anchor[1] + Math.sin(angle) * radius;
+    const size = 0.7 + (index % 4) * 0.09;
+    const rotation = (index * 47) % 360;
+    const color = colors[index % colors.length];
+    blossoms.push(`
+      <g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rotation}) scale(${size.toFixed(2)})">
+        <path
+          class="sakura-blossom-petal"
+          d="M0 0 C3.2 -5.2 8.5 -5.6 10.5-.2 C9.2 4.8 4.1 6.2 0 0Z"
+          fill="${color}"
+          opacity="${0.78 + (index % 3) * 0.07}"
+        />
+      </g>`);
+  }
+  elements.sakuraBlossoms.innerHTML = blossoms.join("");
+}
+
+function spawnFallingPetals(count) {
+  const colors = ["#d98287", "#e8aaa5", "#f1c7bd"];
+  const petals = [];
+  for (let index = 0; index < Math.min(count, 16); index += 1) {
+    const x = 330 + ((index * 67) % 330);
+    const y = 110 + ((index * 31) % 110);
+    petals.push(`
+      <ellipse
+        class="sakura-falling-petal"
+        cx="${x}"
+        cy="${y}"
+        rx="${3 + (index % 3)}"
+        ry="${5 + (index % 2)}"
+        fill="${colors[index % colors.length]}"
+        style="transform-box: fill-box; transform-origin: center; --fall-delay: ${(index * 0.13).toFixed(2)}s; --fall-duration: ${(2.8 + (index % 4) * 0.35).toFixed(2)}s; --fall-drift: ${24 + (index % 5) * 13}px; --fall-spin: ${160 + index * 29}deg"
+      />
+    `);
+  }
+  elements.sakuraFalling.innerHTML = petals.join("");
+  window.setTimeout(() => {
+    elements.sakuraFalling.innerHTML = "";
+  }, 4800);
+}
+
+function syncSakuraTreePosition() {
+  if (!elements.sakuraTreePosition) return;
+  const viewportWidth = window.innerWidth || 1086;
+  const viewportHeight = window.innerHeight || 664;
+  const isMobile = viewportWidth <= 680;
+  const scaleX = viewportWidth / 460;
+  const scaleY = viewportHeight / 285;
+  const artScale = isMobile
+    ? Math.min(scaleX, scaleY)
+    : Math.max(scaleX, scaleY);
+  const currentRootY = viewportHeight - 26 * artScale;
+  const targetRootY = viewportHeight * 0.7;
+  const lift = Math.max(0, currentRootY - targetRootY) / artScale;
+  elements.sakuraTreePosition.setAttribute(
+    "transform",
+    `translate(0 ${-lift.toFixed(2)})`,
+  );
+}
+
+function renderSakuraGarden() {
+  const garden = state.garden;
+  if (!garden) return;
+  elements.sakuraArt.setAttribute(
+    "preserveAspectRatio",
+    window.innerWidth <= 680 ? "xMidYMax meet" : "xMidYMax slice",
+  );
+  const { stage, index: stageIndex } = getSakuraStage(garden.growthPoints);
+  const nextStage = SAKURA_STAGES[stageIndex + 1] || null;
+  const checkedInToday = garden.lastCareDate === localDateKey();
+  const stageSpan = nextStage ? nextStage.min - stage.min : 1;
+  const stageProgress = nextStage
+    ? Math.max(
+        0,
+        Math.min(
+          100,
+          ((garden.growthPoints - stage.min) / stageSpan) * 100,
+        ),
+      )
+    : 100;
+  const tasksToNext = nextStage
+    ? Math.max(1, Math.ceil((nextStage.min - garden.growthPoints) / 12))
+    : 0;
+
+  elements.sakuraStageLabel.textContent = stage.description;
+  elements.sakuraStageName.textContent = stage.name;
+  elements.sakuraPetals.textContent = garden.petals;
+  elements.sakuraStreak.textContent = garden.streak;
+  elements.sakuraCompletedCount.textContent = garden.completedTasks;
+  elements.sakuraBestStreak.textContent = garden.bestStreak;
+  elements.sakuraNextStage.textContent = nextStage
+    ? stage.nextLabel.replace("{left}", String(tasksToNext))
+    : stage.nextLabel;
+  elements.sakuraGrowthFill.style.width = `${stageProgress}%`;
+  elements.sakuraGrowthTrack.setAttribute(
+    "aria-valuenow",
+    String(Math.round(stageProgress)),
+  );
+  elements.sakuraTreeGroup.style.setProperty(
+    "--tree-scale",
+    String(stage.scale),
+  );
+  elements.sakuraTreeGroup.style.setProperty(
+    "--tree-mobile-scale",
+    String([0.62, 0.76, 0.92, 1.08, 1.24][stageIndex] || 0.76),
+  );
+  elements.sakuraTreeGroup.style.setProperty(
+    "--tree-home-scale",
+    String([0.23, 0.28, 0.36, 0.46, 0.58][stageIndex] || 0.23),
+  );
+  elements.sakuraTreeGroup.style.setProperty(
+    "--canopy-opacity",
+    String([0.06, 0.28, 0.58, 0.82, 1][stageIndex] || 0.06),
+  );
+  elements.sakuraTreeGroup.style.setProperty(
+    "--canopy-scale",
+    String([0.58, 0.72, 0.86, 0.95, 1][stageIndex] || 0.58),
+  );
+  elements.sakuraTreeGroup.style.setProperty(
+    "--base-blossom-opacity",
+    String([0.04, 0.22, 0.52, 0.76, 0.95][stageIndex] || 0.04),
+  );
+  syncSakuraTreePosition();
+  elements.sakuraCheckin.classList.toggle("is-complete", checkedInToday);
+  elements.sakuraCheckin.innerHTML = checkedInToday
+    ? '<span aria-hidden="true"></span>今日已续上'
+    : '<span aria-hidden="true"></span>今日待续';
+  elements.sakuraWhisper.textContent = checkedInToday
+    ? "今天的花瓣已经落在枝头。"
+    : garden.streak > 0
+      ? "完成一项任务，就能续上今天的花瓣。"
+      : "从今天开始，让这棵树重新开花。";
+
+  renderSakuraBlossoms(garden.petals);
+  if (renderedSakuraPetals !== null) {
+    const petalDifference = garden.petals - renderedSakuraPetals;
+    const stageChanged =
+      renderedSakuraStage !== null && renderedSakuraStage !== stageIndex;
+    if (petalDifference > 0 || stageChanged) {
+      elements.sakuraGarden.classList.remove("is-blooming");
+      void elements.sakuraGarden.offsetWidth;
+      elements.sakuraGarden.classList.add("is-blooming");
+    } else if (petalDifference < 0) {
+      spawnFallingPetals(Math.abs(petalDifference));
+    }
+  }
+  renderedSakuraPetals = garden.petals;
+  renderedSakuraStage = stageIndex;
 }
 
 function renderComposerState() {
@@ -1027,6 +1726,8 @@ function addTask(title, priority) {
   getActiveList().tasks.push(
     createTask(trimmed, priority, "pending", taskDate),
   );
+  recordGardenTaskCreated();
+  playSound("taskAdded");
   currentFilter = "all";
   saveState();
   render();
@@ -1039,8 +1740,22 @@ function setTaskStatus(taskId, nextStatus) {
   if (!found) return;
   found.task.status =
     found.task.status === nextStatus ? "pending" : nextStatus;
+  let gardenResult = null;
+  if (found.task.status === "done") {
+    gardenResult = recordGardenCompletion(found.task);
+    playSound("taskDone");
+  } else {
+    playSound("taskSkipped");
+  }
   saveState();
   render();
+  if (gardenResult?.priorPenalty > 0) {
+    window.setTimeout(() => playSound("petalsFall"), 100);
+    showToast(`连续记录中断，樱花树飘落 ${gardenResult.priorPenalty} 个花瓣`);
+  } else if (gardenResult?.newPetal) {
+    window.setTimeout(() => playSound("sakuraBloom"), 120);
+    showToast("今天坚持成功，樱花树多了一个花瓣");
+  }
 }
 
 function closePriorityMenu() {
@@ -1103,6 +1818,7 @@ function setTaskPriority(taskId, priority) {
   const found = findTask(taskId);
   if (!found) return;
   found.task.priority = priority;
+  playPrioritySound(priority);
   closePriorityMenu();
   saveState();
   render();
@@ -1114,6 +1830,7 @@ function deleteTask(taskId) {
   const found = findTask(taskId);
   if (!found) return;
   const [removed] = found.list.tasks.splice(found.index, 1);
+  playSound("taskDeleted");
   saveState();
   render();
   showToast("任务已删除", {
@@ -1248,9 +1965,11 @@ function applyLaunchShortcut() {
   const params = new URLSearchParams(location.search);
   const requestedView = params.get("view");
   if (requestedView === "history") {
+    activeAppTab = "tasks";
     currentView = "history";
     selectedDate = latestPastRecordDate();
   } else if (requestedView === "future") {
+    activeAppTab = "tasks";
     currentView = "future";
     selectedDate = earliestFuturePlanDate();
   }
@@ -1278,6 +1997,7 @@ function openDeleteConfirm() {
     state.lists.splice(index, 1);
     state.activeListId = state.lists[Math.max(0, index - 1)].id;
     currentFilter = "all";
+    playSound("taskDeleted");
     saveState();
     render();
     closeModal(elements.confirmModal);
@@ -1537,6 +2257,7 @@ async function importFile(file) {
           taskDate,
         ),
       );
+      recordGardenTaskCreated();
       existingTitles.add(duplicateKey);
     });
     const added = imported.length - skipped;
@@ -1641,6 +2362,7 @@ function shiftSelectedDate(amount) {
   let nextDate = shiftDateKey(selectedDate, amount);
   if (currentView === "history" && nextDate > today) nextDate = today;
   if (currentView === "future" && nextDate < today) nextDate = today;
+  playSound("dateChanged");
   selectScheduleDate(nextDate);
 }
 
@@ -1699,6 +2421,14 @@ function moveCalendarMonth(amount) {
 }
 
 function chooseCalendarDate(date) {
+  const today = localDateKey();
+  playSound(
+    date < today
+      ? "viewHistory"
+      : date > today
+        ? "viewFuture"
+        : "viewToday",
+  );
   selectScheduleDate(date, true);
   closeModal(elements.dateModal);
 }
@@ -1721,6 +2451,7 @@ elements.listNav.addEventListener("click", (event) => {
   }
   const button = event.target.closest("[data-list-id]");
   if (!button) return;
+  playListTabSound(button.dataset.listId);
   const keepPlanningDate = currentView === "future";
   state.activeListId = button.dataset.listId;
   if (!keepPlanningDate) {
@@ -1734,18 +2465,30 @@ elements.listNav.addEventListener("click", (event) => {
 });
 
 elements.viewButtons.forEach((button) => {
-  button.addEventListener("click", () => setCurrentView(button.dataset.view));
+  button.addEventListener("click", () => {
+    const soundByView = {
+      today: "viewToday",
+      history: "viewHistory",
+      future: "viewFuture",
+    };
+    playSound(soundByView[button.dataset.view]);
+    setCurrentView(button.dataset.view);
+  });
 });
 
 elements.dateRail.addEventListener("click", (event) => {
   const button = event.target.closest("[data-schedule-date]");
   if (!button) return;
+  playSound("dateChanged");
   selectScheduleDate(button.dataset.scheduleDate);
 });
 
 elements.previousDateButton.addEventListener("click", () => shiftSelectedDate(-1));
 elements.nextDateButton.addEventListener("click", () => shiftSelectedDate(1));
-elements.dateStampButton.addEventListener("click", openDateCalendar);
+elements.dateStampButton.addEventListener("click", () => {
+  playSound("dateChanged");
+  openDateCalendar();
+});
 elements.calendarPreviousMonth.addEventListener("click", () => {
   moveCalendarMonth(-1);
 });
@@ -1808,6 +2551,7 @@ document.addEventListener("scroll", closePriorityMenu, true);
 
 elements.filterButtons.forEach((button) => {
   button.addEventListener("click", () => {
+    playSound(FILTER_TAB_SOUNDS[button.dataset.filter]);
     currentFilter = button.dataset.filter;
     renderTasks();
     renderFilterControls();
@@ -1858,6 +2602,21 @@ elements.manageDeleteButton.addEventListener("click", () => {
 });
 
 elements.editQuoteButton.addEventListener("click", openQuoteModal);
+elements.soundToggle.addEventListener("click", () => {
+  const wasEnabled = state.soundEnabled !== false;
+  if (wasEnabled) {
+    playSound("toggleOff");
+  }
+  state.soundEnabled = !wasEnabled;
+  saveState();
+  renderSoundControl();
+  if (!wasEnabled) {
+    playSound("toggleOn");
+  }
+  showToast(
+    state.soundEnabled ? "界面音效已开启" : "界面音效已关闭",
+  );
+});
 elements.installAppButton.addEventListener("click", openInstallModal);
 elements.nativeInstallButton.addEventListener("click", async () => {
   if (!deferredInstallPrompt) return;
@@ -1919,6 +2678,7 @@ elements.listForm.addEventListener("submit", (event) => {
 
   if (listModalMode === "rename") {
     getActiveList().name = name;
+    playSound("toggleOn");
     saveState();
     render();
     closeModal(elements.listModal);
@@ -1935,6 +2695,7 @@ elements.listForm.addEventListener("submit", (event) => {
     currentView = "today";
     selectedDate = localDateKey();
     currentFilter = "all";
+    playSound("taskAdded");
     listModalMode = "create";
     saveState();
     elements.listNameInput.value = "";
@@ -2074,8 +2835,19 @@ elements.sidebarResizer.addEventListener("keydown", (event) => {
 elements.mobileMenuButton.addEventListener("click", openSidebar);
 elements.sidebarClose.addEventListener("click", closeSidebar);
 elements.sidebarBackdrop.addEventListener("click", closeSidebar);
+elements.sakuraTab.addEventListener("click", () => setAppTab("tree"));
+elements.tasksTab.addEventListener("click", () => setAppTab("tasks"));
+elements.sakuraPanelClose.addEventListener("click", () => {
+  treeStatusOpen = false;
+  renderAppTabs();
+});
 window.addEventListener?.("resize", () => {
   renderSidebarLayout();
+  elements.sakuraArt.setAttribute(
+    "preserveAspectRatio",
+    window.innerWidth <= 680 ? "xMidYMax meet" : "xMidYMax slice",
+  );
+  syncSakuraTreePosition();
   closePriorityMenu();
 });
 
@@ -2098,6 +2870,16 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+const startupGardenPenalty = reconcileGardenPenalties();
+if (startupGardenPenalty > 0) saveState();
 setupPwa();
 applyLaunchShortcut();
 render();
+if (startupGardenPenalty > 0) {
+  window.setTimeout(() => {
+    spawnFallingPetals(10);
+    showToast(
+      `连续记录中断，樱花树飘落 ${startupGardenPenalty} 个花瓣`,
+    );
+  }, 350);
+}

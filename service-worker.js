@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "riri-app-v1";
+const CACHE_NAME = "riri-app-v16";
 const APP_SHELL = [
   "./index.html",
   "./styles.css",
@@ -9,6 +9,8 @@ const APP_SHELL = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",
+  "./assets/sakura-zine-poster.svg",
+  "./assets/sakura-zine-poster.png",
 ];
 
 self.addEventListener("install", (event) => {

@@ -12,14 +12,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="日日清单" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <title>日日 · 今日清单</title>
+    <title>日日 · 我的樱花树</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icons/icon-192.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
-    <div class="app-shell">
+  <body class="app-mode-tree">
+    <div class="app-shell" id="taskWorkspace">
       <aside class="sidebar" id="sidebar" aria-label="清单导航">
         <div class="sidebar-top">
           <a class="brand" href="#" aria-label="日日清单首页">
@@ -193,7 +193,25 @@
             <strong>我的每一天</strong>
             <span id="sidebarDate">今天 · 保持自己的节奏</span>
           </div>
-          <span class="online-dot" aria-label="已自动保存"></span>
+          <button
+            class="sound-toggle"
+            id="soundToggle"
+            type="button"
+            aria-pressed="true"
+            aria-label="关闭界面音效"
+            title="关闭界面音效"
+          >
+            <svg class="sound-icon sound-icon--on" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 10v4h3l4 3V7L8 10H5Z" />
+              <path d="M15 9c1.4 1.4 1.4 4.6 0 6M18 6.5c2.7 2.7 2.7 8.3 0 11" />
+            </svg>
+            <svg class="sound-icon sound-icon--off" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 10v4h3l4 3V7L8 10H5Z" />
+              <path d="m16 10 4 4M20 10l-4 4" />
+            </svg>
+            <span class="sound-toggle-label" aria-hidden="true">音效</span>
+            <span class="sound-switch" aria-hidden="true"><i></i></span>
+          </button>
         </div>
       </aside>
 
@@ -258,7 +276,7 @@
             <div class="progress-copy">
               <div class="progress-heading">
                 <div>
-                  <p class="section-kicker" id="progressKicker">TODAY'S PROGRESS</p>
+                  <p class="section-kicker" id="progressKicker">今日进度</p>
                   <h2 id="progressHeading">今日完成进度</h2>
                 </div>
                 <div class="progress-chip" id="progressChip">正在推进</div>
@@ -297,10 +315,214 @@
             </div>
           </section>
 
+          <section
+            class="sakura-garden"
+            id="sakuraGarden"
+            aria-labelledby="sakuraTitle"
+          >
+            <div class="sakura-visual">
+              <div class="sakura-heading">
+                <div>
+                  <p class="sakura-kicker">在每一天里慢慢长大</p>
+                  <h2 id="sakuraTitle">我的樱花树</h2>
+                  <p id="sakuraStageLabel">一棵刚刚抽枝的小树</p>
+                </div>
+                <span class="sakura-checkin" id="sakuraCheckin">
+                  <span aria-hidden="true"></span>
+                  今日待续
+                </span>
+              </div>
+              <span class="sakura-mobile-sun" aria-hidden="true"></span>
+
+              <div class="sakura-sky-note" id="sakuraSkyNote">
+                <p class="sakura-sky-title">让每一天，都留下一点生长。</p>
+                <p id="sakuraSkyMessage">
+                  当天完成任意一项任务，就算坚持一天。连续每天多一瓣花，中断一天会飘落十瓣。
+                </p>
+                <span>你的照顾，树都记得。</span>
+              </div>
+
+              <svg
+                class="sakura-art"
+                id="sakuraArt"
+                viewBox="300 35 460 285"
+                preserveAspectRatio="xMidYMax slice"
+                role="img"
+                aria-labelledby="sakuraArtTitle sakuraArtDescription"
+              >
+                <title id="sakuraArtTitle">逐日生长的樱花树</title>
+                <desc id="sakuraArtDescription">
+                  完成任务会让树逐渐长大，每天坚持会增加树上的花瓣。
+                </desc>
+                <defs>
+                  <linearGradient id="sakuraSky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#dfe9e5" />
+                    <stop offset="58%" stop-color="#e9e8dd" />
+                    <stop offset="100%" stop-color="#e7d8c8" />
+                  </linearGradient>
+                  <linearGradient id="sakuraHorizon" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#b8cbbf" />
+                    <stop offset="100%" stop-color="#d8c9b7" />
+                  </linearGradient>
+                  <radialGradient id="sakuraGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#fff4dc" stop-opacity=".95" />
+                    <stop offset="100%" stop-color="#fff4dc" stop-opacity="0" />
+                  </radialGradient>
+                  <filter id="sakuraWatercolor" x="-30%" y="-30%" width="160%" height="160%">
+                    <feTurbulence type="fractalNoise" baseFrequency=".025" numOctaves="2" seed="9" result="grain"/>
+                    <feDisplacementMap in="SourceGraphic" in2="grain" scale="7"/>
+                    <feGaussianBlur stdDeviation="1.2"/>
+                  </filter>
+                </defs>
+                <rect width="760" height="320" fill="url(#sakuraSky)" />
+                <circle cx="626" cy="78" r="66" fill="url(#sakuraGlow)" />
+                <circle cx="626" cy="78" r="23" fill="#f7ead0" opacity=".9" />
+                <path
+                  d="M0 238C105 217 164 232 241 259C330 290 404 254 484 247C580 239 673 260 760 240V320H0Z"
+                  fill="#b9c9bc"
+                  opacity=".55"
+                />
+                <path
+                  d="M0 270C119 249 213 281 312 281C429 281 524 249 650 273C692 281 726 276 760 267V320H0Z"
+                  fill="url(#sakuraHorizon)"
+                  opacity=".72"
+                />
+                <path
+                  d="M0 295C130 278 219 300 347 297C482 294 605 273 760 293V320H0Z"
+                  fill="#7f9a8c"
+                  opacity=".3"
+                />
+                <g id="sakuraTreePosition">
+                <g
+                  class="sakura-tree-group"
+                  id="sakuraTreeGroup"
+                  style="--tree-scale: 0.56; --tree-home-scale: 0.28; --canopy-opacity: 0.28; --canopy-scale: 0.72; --base-blossom-opacity: 0.22; transform-origin: 548px 294px"
+                >
+                  <path
+                    class="sakura-root"
+                    d="M507 302C524 289 568 288 590 301C563 296 537 297 507 302Z"
+                    fill="#5f5548"
+                    opacity=".25"
+                  />
+                  <g
+                    class="sakura-tree-structure"
+                    fill="none"
+                    stroke="#4b443a"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M548 294C549 261 541 230 523 204C512 188 505 175 506 160" stroke-width="15" />
+                    <path d="M537 246C518 221 492 203 456 188C430 177 409 160 389 135" stroke-width="10" />
+                    <path d="M530 222C550 194 576 177 607 162C636 148 654 128 665 105" stroke-width="9" />
+                    <path d="M523 204C495 185 472 176 443 174C419 172 399 180 374 198" stroke-width="7" />
+                    <path d="M549 265C572 233 596 214 622 200C646 187 667 173 687 151" stroke-width="7" />
+                    <path d="M516 235C487 239 457 248 430 266" stroke-width="6" />
+                    <path d="M557 219C580 224 603 236 625 255" stroke-width="6" />
+                    <path d="M506 160C489 137 467 122 449 108" stroke-width="5" />
+                    <path d="M506 160C518 132 535 115 558 100" stroke-width="5" />
+                    <path d="M389 135C377 122 364 112 354 99" stroke-width="4" />
+                    <path d="M665 105C676 94 687 89 698 82" stroke-width="4" />
+                    <path d="M607 162C620 137 634 123 652 111" stroke-width="4" />
+                    <path d="M456 188C440 167 428 156 411 146" stroke-width="4" />
+                  </g>
+                  <g class="sakura-watercolor-canopy" filter="url(#sakuraWatercolor)">
+                    <ellipse cx="430" cy="155" rx="88" ry="62" fill="#f7c9c7" opacity=".72"/>
+                    <ellipse cx="505" cy="132" rx="105" ry="72" fill="#f4d8d2" opacity=".78"/>
+                    <ellipse cx="598" cy="145" rx="112" ry="68" fill="#f8d0cf" opacity=".7"/>
+                    <ellipse cx="642" cy="205" rx="88" ry="56" fill="#f3c4c4" opacity=".58"/>
+                    <ellipse cx="535" cy="215" rx="125" ry="67" fill="#fbdfd8" opacity=".72"/>
+                    <ellipse cx="424" cy="230" rx="95" ry="54" fill="#f8e1dc" opacity=".62"/>
+                    <ellipse cx="469" cy="124" rx="62" ry="45" fill="#fff4ec" opacity=".9"/>
+                    <ellipse cx="565" cy="158" rx="76" ry="52" fill="#fff8ef" opacity=".82"/>
+                    <ellipse cx="630" cy="117" rx="55" ry="39" fill="#fbe8e1" opacity=".84"/>
+                    <ellipse cx="390" cy="198" rx="50" ry="36" fill="#fce9e3" opacity=".72"/>
+                  </g>
+                  <g class="sakura-base-blossoms" fill="#fffaf2" opacity=".9">
+                    <circle cx="383" cy="160" r="7"/><circle cx="403" cy="144" r="9"/>
+                    <circle cx="424" cy="169" r="8"/><circle cx="445" cy="139" r="7"/>
+                    <circle cx="465" cy="164" r="9"/><circle cx="487" cy="143" r="8"/>
+                    <circle cx="510" cy="166" r="9"/><circle cx="535" cy="141" r="7"/>
+                    <circle cx="558" cy="169" r="8"/><circle cx="582" cy="146" r="9"/>
+                    <circle cx="604" cy="174" r="7"/><circle cx="626" cy="158" r="8"/>
+                    <circle cx="407" cy="209" r="8"/><circle cx="438" cy="220" r="7"/>
+                    <circle cx="474" cy="208" r="9"/><circle cx="512" cy="221" r="8"/>
+                    <circle cx="549" cy="207" r="7"/><circle cx="582" cy="222" r="8"/>
+                    <circle cx="617" cy="207" r="7"/><circle cx="650" cy="190" r="6"/>
+                  </g>
+                  <g id="sakuraBlossoms"></g>
+                </g>
+                </g>
+                <g class="sakura-falling" id="sakuraFalling" aria-hidden="true"></g>
+              </svg>
+
+              <p class="sakura-whisper" id="sakuraWhisper">
+                花瓣会记得你认真生活的日子。
+              </p>
+            </div>
+
+            <aside class="sakura-dashboard" aria-label="樱花养成数据">
+              <button
+                class="sakura-panel-close"
+                id="sakuraPanelClose"
+                type="button"
+                aria-label="收起小树状况"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m6 6 12 12M18 6 6 18" />
+                </svg>
+              </button>
+              <div class="sakura-counts">
+                <div class="sakura-count sakura-count--petals">
+                  <span class="sakura-petal-mark" aria-hidden="true"></span>
+                  <strong id="sakuraPetals">0</strong>
+                  <small>花瓣</small>
+                </div>
+                <div class="sakura-count">
+                  <strong id="sakuraStreak">0</strong>
+                  <small>连续天数</small>
+                </div>
+              </div>
+
+              <div class="sakura-growth">
+                <div class="sakura-growth-heading">
+                  <strong id="sakuraStageName">初生树苗</strong>
+                  <span id="sakuraNextStage">再完成 3 项开始生长</span>
+                </div>
+                <div
+                  class="sakura-growth-track"
+                  id="sakuraGrowthTrack"
+                  role="progressbar"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  aria-label="樱花树成长进度"
+                >
+                  <div id="sakuraGrowthFill"></div>
+                </div>
+              </div>
+
+              <div class="sakura-footnote">
+                <span>累计完成 <strong id="sakuraCompletedCount">0</strong> 项</span>
+                <span>最长连续 <strong id="sakuraBestStreak">0</strong> 天</span>
+              </div>
+              <a
+                class="sakura-poster-link"
+                href="assets/sakura-zine-poster.png"
+                target="_blank"
+                rel="noopener"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" />
+                </svg>
+                查看今日海报
+              </a>
+            </aside>
+          </section>
+
           <section class="workspace-card" aria-labelledby="activeListTitle">
             <div class="workspace-heading">
               <div class="workspace-title">
-                <span class="list-overline" id="activeListOverline">MY DAY</span>
+                <span class="list-overline" id="activeListOverline">今天的一页</span>
                 <h2 id="activeListTitle">今日清单</h2>
                 <p id="activeListSubtitle">把注意力留给真正重要的事。</p>
               </div>
@@ -488,6 +710,37 @@
         </main>
       </div>
     </div>
+
+    <nav class="app-tabbar" role="tablist" aria-label="App 主要页面">
+      <button
+        class="app-tab is-active"
+        id="sakuraTab"
+        type="button"
+        role="tab"
+        data-app-tab="tree"
+        aria-controls="sakuraGarden"
+        aria-selected="true"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 21v-7M12 15c-3.8 0-6-2.2-6-6 3.8 0 6 2.2 6 6ZM12 15c3.8 0 6-2.2 6-6-3.8 0-6 2.2-6 6ZM12 8V4" />
+        </svg>
+        <span>小树状况</span>
+      </button>
+      <button
+        class="app-tab"
+        id="tasksTab"
+        type="button"
+        role="tab"
+        data-app-tab="tasks"
+        aria-controls="taskWorkspace"
+        aria-selected="false"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 6h12M8 12h12M8 18h8M4 6h.1M4 12h.1M4 18h.1" />
+        </svg>
+        <span>设定今日任务</span>
+      </button>
+    </nav>
 
     <div class="modal-backdrop" id="listModal" hidden>
       <section
