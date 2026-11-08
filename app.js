@@ -10,6 +10,80 @@ const PRIORITIES = {
   gray: { label: "稍后", order: 3, description: "有空再做" },
 };
 const LIST_COLORS = ["#e8b88b", "#91ad95", "#d99180", "#8da9bd", "#c3a7c7"];
+const TREE_SPECIES = [
+  {
+    id: "cherry",
+    name: "樱花树",
+    initial: true,
+    streak: 0,
+    price: 0,
+    bark: "#4b443a",
+    canopy: "#f7c9c7",
+    soft: "#fffaf2",
+    colors: ["#d98287", "#e8a6a4", "#f2c3bb", "#dda09d", "#f6d8cd"],
+    shape: "petal",
+  },
+  {
+    id: "ginkgo",
+    name: "银杏树",
+    initial: true,
+    streak: 0,
+    price: 0,
+    bark: "#55483a",
+    canopy: "#ecd59a",
+    soft: "#f7e7a8",
+    colors: ["#e0ad42", "#edc55e", "#d79b32", "#f2d57c"],
+    shape: "ginkgo",
+  },
+  {
+    id: "maple",
+    name: "枫树",
+    initial: true,
+    streak: 0,
+    price: 0,
+    bark: "#594038",
+    canopy: "#e6a084",
+    soft: "#efbd83",
+    colors: ["#c85e3e", "#dd7842", "#b94c37", "#e79a55"],
+    shape: "maple",
+  },
+  {
+    id: "camphor",
+    name: "樟树",
+    initial: false,
+    streak: 7,
+    price: 120,
+    bark: "#4b4939",
+    canopy: "#b9d2b5",
+    soft: "#dcebd4",
+    colors: ["#679468", "#7daa72", "#55875f", "#91b783"],
+    shape: "leaf",
+  },
+  {
+    id: "jacaranda",
+    name: "蓝花楹",
+    initial: false,
+    streak: 14,
+    price: 220,
+    bark: "#544a49",
+    canopy: "#c8c4e8",
+    soft: "#e6e2fb",
+    colors: ["#8581c5", "#a49bda", "#756fb7", "#b9aee5"],
+    shape: "petal",
+  },
+  {
+    id: "wisteria",
+    name: "紫藤树",
+    initial: false,
+    streak: 30,
+    price: 360,
+    bark: "#56483e",
+    canopy: "#d6c3df",
+    soft: "#efe2f3",
+    colors: ["#9a72b1", "#b68cc5", "#805a99", "#c8a5d4"],
+    shape: "drop",
+  },
+];
 const SAKURA_STAGES = [
   {
     min: 0,
@@ -131,6 +205,7 @@ const elements = {
   moodTitle: document.querySelector("#moodTitle"),
   moodMessage: document.querySelector("#moodMessage"),
   sakuraGarden: document.querySelector(".sakura-garden"),
+  sakuraTitle: document.querySelector("#sakuraTitle"),
   sakuraArt: document.querySelector("#sakuraArt"),
   sakuraTreePosition: document.querySelector("#sakuraTreePosition"),
   sakuraDashboard: document.querySelector(".sakura-dashboard"),
@@ -141,6 +216,7 @@ const elements = {
   sakuraStageLabel: document.querySelector("#sakuraStageLabel"),
   sakuraCheckin: document.querySelector("#sakuraCheckin"),
   sakuraPetals: document.querySelector("#sakuraPetals"),
+  sakuraPetalLabel: document.querySelector("#sakuraPetalLabel"),
   sakuraStreak: document.querySelector("#sakuraStreak"),
   sakuraStageName: document.querySelector("#sakuraStageName"),
   sakuraNextStage: document.querySelector("#sakuraNextStage"),
@@ -148,6 +224,11 @@ const elements = {
   sakuraGrowthFill: document.querySelector("#sakuraGrowthFill"),
   sakuraCompletedCount: document.querySelector("#sakuraCompletedCount"),
   sakuraBestStreak: document.querySelector("#sakuraBestStreak"),
+  sakuraCoins: document.querySelector("#sakuraCoins"),
+  catalogCoinCount: document.querySelector("#catalogCoinCount"),
+  treeCatalogButton: document.querySelector("#treeCatalogButton"),
+  treeCatalogModal: document.querySelector("#treeCatalogModal"),
+  treeCatalogGrid: document.querySelector("#treeCatalogGrid"),
   sakuraWhisper: document.querySelector("#sakuraWhisper"),
   taskForm: document.querySelector("#taskForm"),
   taskInput: document.querySelector("#taskInput"),
@@ -695,6 +776,11 @@ function deriveGardenFromTasks(lists) {
     lastPenaltyDate: null,
     creationDate: today,
     creationCount: 0,
+    coins: doneTasks.length * 2,
+    selectedSpecies: "cherry",
+    unlockedSpecies: TREE_SPECIES.filter((species) => species.initial).map(
+      (species) => species.id,
+    ),
   };
 }
 
@@ -732,7 +818,32 @@ function normalizeGarden(savedGarden, lists) {
       ? savedGarden.creationDate
       : localDateKey(),
     creationCount: numberOrZero(savedGarden.creationCount),
+    coins: numberOrZero(savedGarden.coins),
+    selectedSpecies: TREE_SPECIES.some(
+      (species) => species.id === savedGarden.selectedSpecies,
+    )
+      ? savedGarden.selectedSpecies
+      : "cherry",
+    unlockedSpecies: [
+      ...new Set([
+        ...TREE_SPECIES.filter((species) => species.initial).map(
+          (species) => species.id,
+        ),
+        ...(Array.isArray(savedGarden.unlockedSpecies)
+          ? savedGarden.unlockedSpecies.filter((id) =>
+              TREE_SPECIES.some((species) => species.id === id),
+            )
+          : []),
+      ]),
+    ],
   };
+}
+
+function getTreeSpecies(speciesId = state.garden.selectedSpecies) {
+  return (
+    TREE_SPECIES.find((species) => species.id === speciesId) ||
+    TREE_SPECIES[0]
+  );
 }
 
 function dateDifference(laterDate, earlierDate) {
@@ -771,14 +882,33 @@ function getSakuraStage(growthPoints) {
   return { stage: SAKURA_STAGES[index], index };
 }
 
+function unlockEligibleSpecies() {
+  const garden = state.garden;
+  const unlocked = [];
+  TREE_SPECIES.forEach((species) => {
+    if (
+      !garden.unlockedSpecies.includes(species.id) &&
+      species.streak > 0 &&
+      garden.bestStreak >= species.streak
+    ) {
+      garden.unlockedSpecies.push(species.id);
+      unlocked.push(species);
+    }
+  });
+  return unlocked;
+}
+
 function recordGardenCompletion(task) {
   const garden = state.garden;
   const priorPenalty = reconcileGardenPenalties();
   const isNewCompletion = !garden.awardedTaskIds.includes(task.id);
+  let coinsEarned = 0;
   if (isNewCompletion) {
     garden.awardedTaskIds.push(task.id);
     garden.growthPoints += 12;
     garden.completedTasks += 1;
+    garden.coins += 2;
+    coinsEarned += 2;
   }
 
   const today = localDateKey();
@@ -792,8 +922,11 @@ function recordGardenCompletion(task) {
     garden.petals += 1;
     garden.lastCareDate = today;
     newPetal = true;
+    garden.coins += 10;
+    coinsEarned += 10;
   }
-  return { priorPenalty, isNewCompletion, newPetal };
+  const unlockedSpecies = unlockEligibleSpecies();
+  return { priorPenalty, isNewCompletion, newPetal, coinsEarned, unlockedSpecies };
 }
 
 function recordGardenTaskCreated() {
@@ -1362,8 +1495,18 @@ function renderProgress() {
 }
 
 function renderSakuraBlossoms(petalCount) {
+  const species = getTreeSpecies();
   const visibleCount = Math.min(petalCount, 96);
-  const colors = ["#d98287", "#e8a6a4", "#f2c3bb", "#dda09d", "#f6d8cd"];
+  const colors = species.colors;
+  const shapes = {
+    petal: "M0 0 C3.2 -5.2 8.5 -5.6 10.5-.2 C9.2 4.8 4.1 6.2 0 0Z",
+    ginkgo:
+      "M0 1 C-1-4-8-8-12-7 C-9 2-3 6 0 7 C3 6 9 2 12-7 C8-8 1-4 0 1Z",
+    maple:
+      "M0-7 3-3 8-4 5 0 10 3 5 4 3 9 0 5-3 9-5 4-10 3-5 0-8-4-3-3Z",
+    leaf: "M0-7 C7-5 9 1 1 8 C-7 2-7-4 0-7Z",
+    drop: "M0-8 C6-2 7 3 0 8 C-7 3-6-2 0-8Z",
+  };
   const blossoms = [];
   for (let index = 0; index < visibleCount; index += 1) {
     const anchor = BLOSSOM_ANCHORS[index % BLOSSOM_ANCHORS.length];
@@ -1379,7 +1522,7 @@ function renderSakuraBlossoms(petalCount) {
       <g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rotation}) scale(${size.toFixed(2)})">
         <path
           class="sakura-blossom-petal"
-          d="M0 0 C3.2 -5.2 8.5 -5.6 10.5-.2 C9.2 4.8 4.1 6.2 0 0Z"
+          d="${shapes[species.shape] || shapes.petal}"
           fill="${color}"
           opacity="${0.78 + (index % 3) * 0.07}"
         />
@@ -1389,7 +1532,7 @@ function renderSakuraBlossoms(petalCount) {
 }
 
 function spawnFallingPetals(count) {
-  const colors = ["#d98287", "#e8aaa5", "#f1c7bd"];
+  const colors = getTreeSpecies().colors;
   const petals = [];
   for (let index = 0; index < Math.min(count, 16); index += 1) {
     const x = 330 + ((index * 67) % 330);
@@ -1434,6 +1577,11 @@ function syncSakuraTreePosition() {
 function renderSakuraGarden() {
   const garden = state.garden;
   if (!garden) return;
+  const species = getTreeSpecies();
+  elements.sakuraGarden.dataset.species = species.id;
+  elements.sakuraGarden.style.setProperty("--tree-bark", species.bark);
+  elements.sakuraGarden.style.setProperty("--tree-canopy", species.canopy);
+  elements.sakuraGarden.style.setProperty("--tree-soft", species.soft);
   elements.sakuraArt.setAttribute(
     "preserveAspectRatio",
     window.innerWidth <= 680 ? "xMidYMax meet" : "xMidYMax slice",
@@ -1456,11 +1604,15 @@ function renderSakuraGarden() {
     : 0;
 
   elements.sakuraStageLabel.textContent = stage.description;
+  elements.sakuraTitle.textContent = species.name;
   elements.sakuraStageName.textContent = stage.name;
   elements.sakuraPetals.textContent = garden.petals;
+  elements.sakuraPetalLabel.textContent =
+    species.id === "cherry" ? "花瓣" : "叶片";
   elements.sakuraStreak.textContent = garden.streak;
   elements.sakuraCompletedCount.textContent = garden.completedTasks;
   elements.sakuraBestStreak.textContent = garden.bestStreak;
+  elements.sakuraCoins.textContent = garden.coins;
   elements.sakuraNextStage.textContent = nextStage
     ? stage.nextLabel.replace("{left}", String(tasksToNext))
     : stage.nextLabel;
@@ -1469,10 +1621,7 @@ function renderSakuraGarden() {
     "aria-valuenow",
     String(Math.round(stageProgress)),
   );
-  elements.sakuraTreeGroup.style.setProperty(
-    "--tree-scale",
-    String(stage.scale),
-  );
+  elements.sakuraTreeGroup.style.setProperty("--tree-scale", String(stage.scale));
   elements.sakuraTreeGroup.style.setProperty(
     "--tree-mobile-scale",
     String([0.62, 0.76, 0.92, 1.08, 1.24][stageIndex] || 0.76),
@@ -1499,9 +1648,9 @@ function renderSakuraGarden() {
     ? '<span aria-hidden="true"></span>今日已续上'
     : '<span aria-hidden="true"></span>今日待续';
   elements.sakuraWhisper.textContent = checkedInToday
-    ? "今天的花瓣已经落在枝头。"
+    ? "今天的成长已经留在树上。"
     : garden.streak > 0
-      ? "完成一项任务，就能续上今天的花瓣。"
+      ? "完成一项任务，就能续上今天的成长。"
       : "从今天开始，让这棵树重新开花。";
 
   renderSakuraBlossoms(garden.petals);
@@ -1519,6 +1668,62 @@ function renderSakuraGarden() {
   }
   renderedSakuraPetals = garden.petals;
   renderedSakuraStage = stageIndex;
+}
+
+function renderTreeCatalog() {
+  const garden = state.garden;
+  elements.catalogCoinCount.textContent = garden.coins;
+  elements.treeCatalogGrid.innerHTML = TREE_SPECIES.map((species) => {
+    const unlocked = garden.unlockedSpecies.includes(species.id);
+    const selected = garden.selectedSpecies === species.id;
+    if (!unlocked) {
+      const progress = Math.min(
+        100,
+        (garden.bestStreak / species.streak) * 100,
+      );
+      return `
+        <article class="tree-catalog-card is-locked">
+          <div class="tree-catalog-visual">
+            <span class="tree-lock-mark" aria-label="未解锁">?</span>
+          </div>
+          <h3>神秘树种</h3>
+          <p>连续 ${species.streak} 天自动解锁，或使用 ${species.price} 金币。</p>
+          <div class="tree-unlock-progress" aria-label="连续打卡进度">
+            <span style="width:${progress}%"></span>
+          </div>
+          <button
+            class="tree-card-action secondary"
+            type="button"
+            data-unlock-species="${species.id}"
+            ${garden.coins < species.price ? "disabled" : ""}
+          >
+            ${species.price} 金币解锁
+          </button>
+        </article>`;
+    }
+    return `
+      <article class="tree-catalog-card ${selected ? "is-selected" : ""}"
+        style="--card-bark:${species.bark};--card-canopy:${species.canopy};--card-soft:${species.soft}">
+        <div class="tree-catalog-visual"></div>
+        <h3>${species.name}</h3>
+        <p>${selected ? "当前正在养成" : "已经可以自由选择"}</p>
+        <button
+          class="tree-card-action"
+          type="button"
+          data-select-species="${species.id}"
+          ${selected ? "disabled" : ""}
+        >
+          ${selected ? "当前树种" : "选择这个树种"}
+        </button>
+      </article>`;
+  }).join("");
+}
+
+function openTreeCatalog() {
+  unlockEligibleSpecies();
+  saveState();
+  renderTreeCatalog();
+  openModal(elements.treeCatalogModal);
 }
 
 function renderComposerState() {
@@ -1752,9 +1957,17 @@ function setTaskStatus(taskId, nextStatus) {
   if (gardenResult?.priorPenalty > 0) {
     window.setTimeout(() => playSound("petalsFall"), 100);
     showToast(`连续记录中断，樱花树飘落 ${gardenResult.priorPenalty} 个花瓣`);
+  } else if (gardenResult?.unlockedSpecies?.length) {
+    showToast(
+      `连续坚持解锁「${gardenResult.unlockedSpecies[0].name}」树种`,
+    );
   } else if (gardenResult?.newPetal) {
     window.setTimeout(() => playSound("sakuraBloom"), 120);
-    showToast("今天坚持成功，樱花树多了一个花瓣");
+    showToast(
+      `今日打卡成功，获得 ${gardenResult.coinsEarned} 金币和一片新叶`,
+    );
+  } else if (gardenResult?.coinsEarned > 0) {
+    showToast(`完成任务，获得 ${gardenResult.coinsEarned} 金币`);
   }
 }
 
@@ -2613,6 +2826,36 @@ elements.manageDeleteButton.addEventListener("click", () => {
   openDeleteConfirm();
 });
 
+elements.treeCatalogButton.addEventListener("click", openTreeCatalog);
+elements.treeCatalogGrid.addEventListener("click", (event) => {
+  const selectButton = event.target.closest("[data-select-species]");
+  const unlockButton = event.target.closest("[data-unlock-species]");
+  if (selectButton) {
+    state.garden.selectedSpecies = selectButton.dataset.selectSpecies;
+    playSound("sakuraBloom");
+    saveState();
+    renderSakuraGarden();
+    renderTreeCatalog();
+    return;
+  }
+  if (!unlockButton) return;
+  const species = TREE_SPECIES.find(
+    (item) => item.id === unlockButton.dataset.unlockSpecies,
+  );
+  if (!species || state.garden.coins < species.price) {
+    showToast("金币还不够，再完成一些任务吧");
+    return;
+  }
+  state.garden.coins -= species.price;
+  state.garden.unlockedSpecies.push(species.id);
+  state.garden.selectedSpecies = species.id;
+  playSound("sakuraBloom");
+  saveState();
+  renderSakuraGarden();
+  renderTreeCatalog();
+  showToast(`已解锁并切换到「${species.name}」`);
+});
+
 elements.editQuoteButton.addEventListener("click", openQuoteModal);
 elements.soundToggle.addEventListener("click", () => {
   const wasEnabled = state.soundEnabled !== false;
@@ -2734,6 +2977,7 @@ document.querySelectorAll("[data-close-modal]").forEach((button) => {
   elements.manageListModal,
   elements.quoteModal,
   elements.dateModal,
+  elements.treeCatalogModal,
   elements.installModal,
   elements.importModal,
   elements.confirmModal,
@@ -2883,7 +3127,8 @@ document.addEventListener("keydown", (event) => {
 });
 
 const startupGardenPenalty = reconcileGardenPenalties();
-if (startupGardenPenalty > 0) saveState();
+const startupUnlockedSpecies = unlockEligibleSpecies();
+if (startupGardenPenalty > 0 || startupUnlockedSpecies.length > 0) saveState();
 setupPwa();
 applyLaunchShortcut();
 render();

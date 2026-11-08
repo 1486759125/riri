@@ -324,7 +324,7 @@
               <div class="sakura-heading">
                 <div>
                   <p class="sakura-kicker">在每一天里慢慢长大</p>
-                  <h2 id="sakuraTitle">我的樱花树</h2>
+                  <h2 id="sakuraTitle">我的养成树</h2>
                   <p id="sakuraStageLabel">一棵刚刚抽枝的小树</p>
                 </div>
                 <span class="sakura-checkin" id="sakuraCheckin">
@@ -475,7 +475,7 @@
                 <div class="sakura-count sakura-count--petals">
                   <span class="sakura-petal-mark" aria-hidden="true"></span>
                   <strong id="sakuraPetals">0</strong>
-                  <small>花瓣</small>
+                  <small id="sakuraPetalLabel">花瓣</small>
                 </div>
                 <div class="sakura-count">
                   <strong id="sakuraStreak">0</strong>
@@ -501,6 +501,28 @@
                 </div>
               </div>
 
+              <div class="sakura-wallet">
+                <div class="sakura-wallet-copy">
+                  <span>养成年轮金币</span>
+                  <button
+                    class="coin-help"
+                    type="button"
+                    aria-describedby="coinHelpTooltip"
+                    aria-label="查看金币获取方式"
+                  >
+                    ?
+                  </button>
+                  <span
+                    class="coin-tooltip"
+                    id="coinHelpTooltip"
+                    role="tooltip"
+                  >
+                    每天首次完成任务获得 10 金币；完成不同任务获得 2 金币；反复勾选同一任务不会重复获得。
+                  </span>
+                </div>
+                <strong id="sakuraCoins">0</strong>
+              </div>
+
               <div class="sakura-footnote">
                 <span>累计完成 <strong id="sakuraCompletedCount">0</strong> 项</span>
                 <span>最长连续 <strong id="sakuraBestStreak">0</strong> 天</span>
@@ -516,6 +538,16 @@
                 </svg>
                 查看今日海报
               </a>
+              <button
+                class="sakura-catalog-button"
+                id="treeCatalogButton"
+                type="button"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" />
+                </svg>
+                打开树种图签
+              </button>
             </aside>
           </section>
 
@@ -1115,6 +1147,41 @@
       aria-label="选择任务优先级"
       hidden
     ></div>
+
+    <div class="modal-backdrop" id="treeCatalogModal" hidden>
+      <section
+        class="modal modal--tree-catalog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="treeCatalogTitle"
+      >
+        <button
+          class="modal-close icon-button"
+          type="button"
+          data-close-modal="treeCatalogModal"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="catalog-heading">
+          <div>
+            <p class="section-kicker">TREE COLLECTION</p>
+            <h2 id="treeCatalogTitle">树种图签</h2>
+            <p>持续照顾，或使用金币，认识更多树。</p>
+          </div>
+          <div class="catalog-wallet">
+            <span>金币</span>
+            <strong id="catalogCoinCount">0</strong>
+          </div>
+        </div>
+        <div class="tree-catalog-grid" id="treeCatalogGrid"></div>
+        <p class="catalog-note">
+          每天首次完成任务可获得金币，不同任务也会提供少量金币。连续坚持达到条件时，神秘树种会自动解锁。
+        </p>
+      </section>
+    </div>
 
     <div class="modal-backdrop" id="installModal" hidden>
       <section

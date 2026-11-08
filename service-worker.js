@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "riri-app-v18";
+const CACHE_NAME = "riri-app-v20";
 const APP_SHELL = [
   "./index.html",
   "./styles.css",
