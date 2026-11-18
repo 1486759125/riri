@@ -1,0 +1,1479 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="日日清单：记录每天要做的事，查看完成进度与今日心情。"
+    />
+    <meta name="theme-color" content="#20322c" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="日日清单" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>日日 · 我的樱花树</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css?v=34" />
+  </head>
+  <body class="app-mode-tree">
+    <div class="app-shell" id="taskWorkspace">
+      <aside class="sidebar" id="sidebar" aria-label="清单导航">
+        <div class="sidebar-top">
+          <a class="brand" href="#" aria-label="日日清单首页">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 40 40" fill="none">
+                <path d="M20 7v26M7 20h26" />
+                <path d="M11.4 11.4 28.6 28.6M28.6 11.4 11.4 28.6" />
+              </svg>
+            </span>
+            <span class="brand-copy">
+              <strong>日日</strong>
+              <small>Daily rhythm</small>
+            </span>
+          </a>
+          <button
+            class="icon-button sidebar-close"
+            id="sidebarClose"
+            type="button"
+            aria-label="关闭侧边栏"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m6 6 12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+
+        <button class="new-list-button" id="newListButton" type="button">
+          <span class="new-list-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </span>
+          <span>新建清单</span>
+          <span class="shortcut" aria-hidden="true">⌘ N</span>
+        </button>
+
+        <div class="view-nav-section">
+          <div class="nav-heading">
+            <span>时间视图</span>
+          </div>
+          <nav class="view-nav" id="viewNav" aria-label="时间视图">
+            <button
+              class="view-nav-item is-active"
+              type="button"
+              data-view="today"
+              aria-current="page"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+              </svg>
+              <span>今天</span>
+              <span class="view-nav-count" id="todayViewCount">5</span>
+            </button>
+            <button
+              class="view-nav-item"
+              type="button"
+              data-view="history"
+              aria-current="false"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                <path d="M3 3v5h5M12 7v5l3 2" />
+              </svg>
+              <span>历史记录</span>
+              <span class="view-nav-count" id="historyViewCount">0</span>
+            </button>
+            <button
+              class="view-nav-item"
+              type="button"
+              data-view="future"
+              aria-current="false"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 4h14v17H5zM8 2v4M16 2v4M5 9h14" />
+                <path d="M12 12v5M9.5 14.5h5" />
+              </svg>
+              <span>未来计划</span>
+              <span class="view-nav-count" id="futureViewCount">0</span>
+            </button>
+          </nav>
+        </div>
+
+        <div class="list-nav-section">
+          <div class="nav-heading">
+            <span>我的清单</span>
+            <div class="nav-heading-actions">
+              <button
+                class="icon-button icon-button--light"
+                id="toggleListPaneButton"
+                type="button"
+                aria-label="收起我的清单"
+                aria-expanded="true"
+                title="收起或展开清单"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m7 10 5 5 5-5" />
+                </svg>
+              </button>
+              <button
+                class="icon-button icon-button--light"
+                id="quickAddListButton"
+                type="button"
+                aria-label="新建清单"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <nav class="list-nav" id="listNav" aria-label="所有清单"></nav>
+        </div>
+
+        <div
+          class="sidebar-resizer"
+          id="sidebarResizer"
+          role="separator"
+          tabindex="0"
+          aria-label="调整我的清单显示高度"
+          aria-orientation="horizontal"
+          aria-valuemin="96"
+          aria-valuemax="480"
+          aria-valuenow="180"
+          title="拖动调整高度，双击恢复自动"
+        >
+          <span aria-hidden="true"></span>
+        </div>
+
+        <div class="sidebar-list-tools">
+          <button id="manageCurrentListButton" type="button">
+            <span class="sidebar-list-tools-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7h10M18 7h2M10 3v8M4 17h2M10 17h10M7 13v8" />
+              </svg>
+            </span>
+            <span>管理当前清单</span>
+            <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m9 6 6 6-6 6" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="sidebar-note">
+          <button
+            class="sidebar-note-edit"
+            id="editQuoteButton"
+            type="button"
+            aria-label="自定义左下角寄语"
+            title="自定义寄语"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="m4 16-.7 4.7L8 20l10.8-10.8a2.1 2.1 0 0 0-3-3L4 16Z"
+              />
+              <path d="m14.5 7.5 3 3" />
+            </svg>
+          </button>
+          <svg class="note-spark" viewBox="0 0 28 28" aria-hidden="true">
+            <path
+              d="M14 2c.8 7.2 4.8 11.2 12 12-7.2.8-11.2 4.8-12 12-.8-7.2-4.8-11.2-12-12 7.2-.8 11.2-4.8 12-12Z"
+            />
+          </svg>
+          <p id="sidebarQuoteText">不必一下子完成所有事，只要向前一点就好。</p>
+          <span id="sidebarQuoteSource">系统默认 · 今天也在认真生活</span>
+        </div>
+
+        <div class="sidebar-profile">
+          <div class="profile-avatar" aria-hidden="true">我</div>
+          <div class="profile-copy">
+            <strong>我的每一天</strong>
+            <span id="sidebarDate">今天 · 保持自己的节奏</span>
+          </div>
+          <button
+            class="sound-toggle"
+            id="soundToggle"
+            type="button"
+            aria-pressed="true"
+            aria-label="关闭界面音效"
+            title="关闭界面音效"
+          >
+            <svg class="sound-icon sound-icon--on" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 10v4h3l4 3V7L8 10H5Z" />
+              <path d="M15 9c1.4 1.4 1.4 4.6 0 6M18 6.5c2.7 2.7 2.7 8.3 0 11" />
+            </svg>
+            <svg class="sound-icon sound-icon--off" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 10v4h3l4 3V7L8 10H5Z" />
+              <path d="m16 10 4 4M20 10l-4 4" />
+            </svg>
+            <span class="sound-toggle-label" aria-hidden="true">音效</span>
+            <span class="sound-switch" aria-hidden="true"><i></i></span>
+          </button>
+        </div>
+      </aside>
+
+      <button
+        class="sidebar-backdrop"
+        id="sidebarBackdrop"
+        type="button"
+        aria-label="关闭侧边栏"
+      ></button>
+
+      <div class="main-shell">
+        <header class="topbar">
+          <button
+            class="icon-button mobile-menu"
+            id="mobileMenuButton"
+            type="button"
+            aria-label="打开侧边栏"
+            aria-controls="sidebar"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h11" />
+            </svg>
+          </button>
+          <div class="topbar-copy">
+            <p id="headerDate">2026年11月1日 · 星期日</p>
+            <h1 id="greeting">晚上好，今天也辛苦了。</h1>
+          </div>
+          <div class="topbar-actions">
+            <button class="install-app-button" id="installAppButton" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="6" y="2.5" width="12" height="19" rx="2.5" />
+                <path d="M10 5h4M11 18.5h2M12 8v7M9.5 12.5 12 15l2.5-2.5" />
+              </svg>
+              <span>安装 App</span>
+            </button>
+            <button class="text-button" id="topImportButton" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 16V4M7 9l5-5 5 5M5 15v5h14v-5" />
+              </svg>
+              导入清单
+            </button>
+            <div class="weather-pill" aria-label="今日宜专注">
+              <span class="weather-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="4" />
+                  <path
+                    d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+                  />
+                </svg>
+              </span>
+              <span>今日宜专注</span>
+            </div>
+          </div>
+        </header>
+
+        <main class="main-content">
+          <section
+            class="progress-card progress-card--compact"
+            aria-labelledby="progressHeading"
+          >
+            <div class="progress-copy">
+              <div class="progress-heading">
+                <div>
+                  <p class="section-kicker" id="progressKicker">今日进度</p>
+                  <h2 id="progressHeading">今日完成进度</h2>
+                </div>
+                <div class="progress-chip" id="progressChip">正在推进</div>
+              </div>
+
+              <div class="compact-progress-row">
+                <div class="progress-score">
+                  <div class="progress-number">
+                    <strong id="progressPercent">60</strong><span>%</span>
+                  </div>
+                  <p id="progressCaption">已完成 3 项，还剩 2 项</p>
+                </div>
+
+                <div
+                  class="progress-track"
+                  id="progressTrack"
+                  role="progressbar"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="60"
+                  aria-label="当前清单完成进度"
+                >
+                  <div class="progress-fill" id="progressFill"></div>
+                  <span class="progress-glint" id="progressGlint"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="mood-card mood-card--compact" id="moodCard">
+              <div class="mood-face" id="moodFace" aria-hidden="true"></div>
+              <div class="mood-copy">
+                <p class="mood-label" id="moodLabel">今日心情</p>
+                <strong id="moodTitle">平静地前进</strong>
+                <span id="moodMessage">慢慢来，也很好</span>
+              </div>
+            </div>
+          </section>
+
+          <section
+            class="sakura-garden"
+            id="sakuraGarden"
+            aria-labelledby="sakuraTitle"
+          >
+            <div class="sakura-visual">
+              <div class="sakura-heading">
+                <div>
+                  <p class="sakura-kicker">在每一天里慢慢长大</p>
+                  <h2 id="sakuraTitle">我的养成树</h2>
+                  <p id="sakuraStageLabel">一棵刚刚抽枝的小树</p>
+                </div>
+                <span class="sakura-checkin" id="sakuraCheckin">
+                  <span aria-hidden="true"></span>
+                  今日待续
+                </span>
+              </div>
+              <span class="sakura-mobile-sun" aria-hidden="true"></span>
+
+              <div class="sakura-sky-note" id="sakuraSkyNote">
+                <p class="sakura-sky-title">让每一天，都留下一点生长。</p>
+                <p id="sakuraSkyMessage">
+                  当天完成任意一项任务，就算坚持一天。连续每天多一瓣花，中断一天会飘落十瓣。
+                </p>
+                <span>你的照顾，树都记得。</span>
+              </div>
+
+              <svg
+                class="sakura-art"
+                id="sakuraArt"
+                viewBox="300 35 460 285"
+                preserveAspectRatio="xMidYMax slice"
+                role="img"
+                aria-labelledby="sakuraArtTitle sakuraArtDescription"
+              >
+                <title id="sakuraArtTitle">逐日生长的樱花树</title>
+                <desc id="sakuraArtDescription">
+                  完成任务会让树逐渐长大，每天坚持会增加树上的花瓣。
+                </desc>
+                <defs>
+                  <linearGradient id="sakuraSky" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#e4ece6" />
+                    <stop offset="38%" stop-color="#f1eee2" />
+                    <stop offset="70%" stop-color="#ecdfd0" />
+                    <stop offset="100%" stop-color="#d8dfd0" />
+                  </linearGradient>
+                  <linearGradient id="sakuraHorizon" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#bfd0c2" />
+                    <stop offset="100%" stop-color="#d8c9b7" />
+                  </linearGradient>
+                  <radialGradient id="sakuraGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#fff7e2" stop-opacity=".96" />
+                    <stop offset="46%" stop-color="#fff2d6" stop-opacity=".44" />
+                    <stop offset="100%" stop-color="#fff2d6" stop-opacity="0" />
+                  </radialGradient>
+                  <radialGradient id="sakuraTreeGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#fff8e8" stop-opacity=".72" />
+                    <stop offset="58%" stop-color="#fff4dc" stop-opacity=".28" />
+                    <stop offset="100%" stop-color="#fff4dc" stop-opacity="0" />
+                  </radialGradient>
+                  <linearGradient id="sakuraHillFar" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#c9d8cb" stop-opacity=".5" />
+                    <stop offset="100%" stop-color="#a9bdad" stop-opacity=".72" />
+                  </linearGradient>
+                  <linearGradient id="sakuraHillMid" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#b3c7b6" stop-opacity=".58" />
+                    <stop offset="100%" stop-color="#8fa894" stop-opacity=".78" />
+                  </linearGradient>
+                  <linearGradient id="sakuraHillNear" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#9fb79f" stop-opacity=".78" />
+                    <stop offset="100%" stop-color="#7f9a86" stop-opacity=".9" />
+                  </linearGradient>
+                  <filter id="sakuraWatercolor" x="-30%" y="-30%" width="160%" height="160%">
+                    <feTurbulence type="fractalNoise" baseFrequency=".018" numOctaves="3" seed="11" result="grain" />
+                    <feDisplacementMap in="SourceGraphic" in2="grain" scale="6" />
+                    <feGaussianBlur stdDeviation="1.35" />
+                  </filter>
+                  <filter id="sakuraInk" x="-12%" y="-12%" width="124%" height="124%">
+      <feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="7" result="grain" />
+      <feDisplacementMap in="SourceGraphic" in2="grain" scale="1.5" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="sakuraCleanTree" x="-4%" y="-4%" width="108%" height="108%">
+      <feMorphology in="SourceGraphic" operator="erode" radius="1.7" result="eroded" />
+      <feMorphology in="eroded" operator="dilate" radius="1.7" />
+    </filter>
+    <filter id="sakuraHaze" x="-40%" y="-40%" width="180%" height="180%">
+                    <feGaussianBlur stdDeviation="7" />
+                  </filter>
+                  <linearGradient id="sakuraMoonBark" gradientUnits="userSpaceOnUse" x1="0" y1="60" x2="0" y2="320">
+                    <stop offset="0" stop-color="#dbc9a9" />
+                    <stop offset="0.48" stop-color="#a88e72" />
+                    <stop offset="1" stop-color="#5b4738" />
+                  </linearGradient>
+                  <filter id="sakuraBarkTexture" x="-20%" y="-20%" width="140%" height="140%">
+                    <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4" result="n" />
+                    <feDisplacementMap in="SourceGraphic" in2="n" scale=".7" />
+                  </filter>
+                </defs>
+
+                <g id="sakuraLandscape">
+                  <rect x="290" y="25" width="480" height="305" fill="url(#sakuraSky)" />
+                  <g class="sakura-celestial">
+                    <ellipse class="sakura-sun-glow" cx="632" cy="82" rx="168" ry="126" fill="url(#sakuraGlow)" />
+                    <circle class="sakura-sun-halo" cx="632" cy="82" r="54" fill="#fff6df" opacity=".16" />
+                    <circle class="sakura-sun-core" cx="632" cy="82" r="22" fill="#fbf0d8" opacity=".72" />
+                  </g>
+
+                  <g filter="url(#sakuraHaze)" opacity=".55">
+                    <ellipse cx="395" cy="112" rx="152" ry="24" fill="#fffdf6" opacity=".6" />
+                    <ellipse cx="610" cy="152" rx="132" ry="18" fill="#fffdf6" opacity=".38" />
+                    <ellipse cx="470" cy="196" rx="180" ry="20" fill="#fffaf0" opacity=".22" />
+                  </g>
+
+                  <path
+                    d="M290 238C360 218 420 240 485 252C560 266 640 240 770 232V330H290Z"
+                    fill="url(#sakuraHillFar)"
+                    opacity=".6"
+                  />
+                  <path
+                    d="M290 262C370 244 430 268 500 274C580 281 650 254 770 260V330H290Z"
+                    fill="url(#sakuraHillMid)"
+                    opacity=".62"
+                  />
+                  <path
+                    d="M290 286C380 268 450 292 530 294C610 296 690 278 770 286V330H290Z"
+                    fill="url(#sakuraHillNear)"
+                    opacity=".76"
+                  />
+                  <path
+                    d="M290 301C400 287 500 305 590 303C660 301 720 293 770 297V330H290Z"
+                    fill="#7d9582"
+                    opacity=".26"
+                  />
+                  <rect
+                    class="sakura-night-landscape-tint"
+                    x="290"
+                    y="25"
+                    width="480"
+                    height="305"
+                    fill="#132536"
+                  />
+                </g>
+
+                <g id="sakuraTreePosition">
+                  <ellipse
+                    cx="548"
+                    cy="303"
+                    rx="118"
+                    ry="15"
+                    fill="#52695a"
+                    opacity=".2"
+                    filter="url(#sakuraHaze)"
+                  />
+                  <ellipse
+                    cx="548"
+                    cy="218"
+                    rx="215"
+                    ry="152"
+                    fill="url(#sakuraTreeGlow)"
+                    opacity=".6"
+                  />
+                  <g
+                    class="sakura-tree-group"
+                    id="sakuraTreeGroup"
+                    style="--tree-scale: 0.56; --tree-home-scale: 0.4; --canopy-opacity: 0.28; --canopy-scale: 0.72; --base-blossom-opacity: 0.22; transform-origin: 548px 294px"
+                  >
+                    <g class="sakura-tree-sway">
+                      <g class="sakura-tree-structure" fill="none" filter="url(#sakuraCleanTree)">
+                        <path d="M559.1 303.2 L558.7 302.4 L558.4 301.5 L557.9 300.4 L557.5 299.2 L557.0 297.9 L556.5 296.6 L555.9 295.1 L555.4 293.6 L554.8 292.0 L554.2 290.4 L553.6 288.8 L553.0 287.1 L552.4 285.5 L551.8 283.9 L551.3 282.3 L550.7 280.7 L550.2 279.2 L549.7 277.8 L549.2 276.3 L548.6 274.8 L548.1 273.4 L547.6 271.9 L547.0 270.5 L546.5 269.0 L546.0 267.6 L545.5 266.2 L545.0 264.8 L544.5 263.4 L544.0 262.1 L543.5 260.7 L543.1 259.4 L542.7 258.1 L542.4 256.8 L542.0 255.6 L541.7 254.3 L541.4 253.1 L541.2 251.8 L540.9 250.5 L540.7 249.3 L540.5 248.0 L540.4 246.7 L540.2 245.5 L540.1 244.2 L540.0 243.0 L539.9 241.8 L539.8 240.5 L539.7 239.3 L539.7 238.0 L539.7 236.8 L539.7 235.6 L539.7 234.4 L539.8 233.2 L539.9 232.0 L539.9 230.8 L540.1 229.6 L540.2 228.5 L540.4 227.4 L540.6 226.2 L540.9 225.1 L541.2 223.9 L541.5 222.7 L541.8 221.6 L542.2 220.4 L542.5 219.2 L542.9 217.9 L543.3 216.7 L543.7 215.5 L544.1 214.2 L544.5 213.0 L544.9 211.7 L545.2 210.4 L545.6 209.2 L545.9 207.9 L546.2 206.8 L546.6 205.6 L547.0 204.4 L547.3 203.2 L547.7 202.0 L548.1 200.8 L548.5 199.6 L548.9 198.3 L549.3 197.1 L549.6 195.8 L550.0 194.6 L550.3 193.3 L550.6 192.0 L550.9 190.6 L551.2 189.3 L551.5 187.9 L551.7 186.5 L551.9 185.1 L552.1 183.7 L552.3 182.3 L552.4 180.9 L552.6 179.4 L552.7 178.0 L552.8 176.5 L552.9 175.0 L553.0 173.6 L553.1 172.1 L553.1 170.6 L553.1 169.1 L553.2 167.5 L553.1 166.0 L553.1 164.5 L553.1 163.0 L553.0 161.5 L552.9 159.9 L552.8 158.3 L552.6 156.7 L552.4 154.9 L552.1 153.2 L551.8 151.4 L551.5 149.6 L551.2 147.7 L550.9 145.9 L550.6 144.1 L550.2 142.4 L549.9 140.7 L549.5 139.1 L549.2 137.6 L548.9 136.2 L548.6 134.9 L548.4 133.7 L548.2 132.7 L548.0 131.8 L546.0 132.2 L546.1 133.0 L546.2 134.1 L546.4 135.3 L546.6 136.6 L546.8 138.0 L547.0 139.6 L547.2 141.2 L547.5 142.9 L547.7 144.6 L547.9 146.4 L548.2 148.2 L548.4 150.0 L548.6 151.8 L548.7 153.6 L548.9 155.3 L549.0 157.0 L549.1 158.6 L549.1 160.1 L549.1 161.5 L549.1 163.0 L549.0 164.5 L549.0 166.0 L548.9 167.4 L548.8 168.9 L548.7 170.3 L548.5 171.8 L548.4 173.2 L548.2 174.6 L548.0 176.0 L547.8 177.4 L547.6 178.8 L547.4 180.2 L547.1 181.5 L546.9 182.9 L546.6 184.2 L546.3 185.5 L546.0 186.7 L545.7 188.0 L545.3 189.2 L544.9 190.4 L544.5 191.5 L544.1 192.7 L543.7 193.9 L543.2 195.0 L542.7 196.2 L542.3 197.3 L541.8 198.5 L541.3 199.6 L540.8 200.8 L540.3 202.0 L539.8 203.2 L539.4 204.4 L538.9 205.6 L538.4 206.8 L538.0 208.0 L537.5 209.1 L537.0 210.3 L536.5 211.5 L536.0 212.6 L535.5 213.8 L535.0 215.0 L534.5 216.2 L533.9 217.4 L533.4 218.6 L532.9 219.9 L532.4 221.1 L532.0 222.4 L531.5 223.7 L531.1 225.1 L530.7 226.4 L530.4 227.8 L530.1 229.2 L529.8 230.6 L529.5 232.0 L529.3 233.3 L529.1 234.7 L528.9 236.1 L528.7 237.5 L528.6 238.9 L528.5 240.3 L528.4 241.8 L528.3 243.2 L528.3 244.6 L528.2 246.1 L528.2 247.5 L528.2 249.0 L528.3 250.4 L528.4 251.9 L528.4 253.4 L528.6 254.9 L528.7 256.5 L528.9 258.0 L529.1 259.6 L529.4 261.2 L529.7 262.7 L530.0 264.3 L530.3 265.8 L530.7 267.4 L531.0 268.9 L531.4 270.5 L531.8 272.0 L532.2 273.5 L532.5 275.0 L532.9 276.5 L533.3 277.9 L533.6 279.4 L534.0 280.8 L534.3 282.2 L534.7 283.8 L535.1 285.4 L535.5 287.0 L535.9 288.7 L536.3 290.4 L536.8 292.1 L537.2 293.8 L537.6 295.6 L538.1 297.2 L538.5 298.9 L538.9 300.4 L539.3 302.0 L539.7 303.4 L540.0 304.7 L540.3 305.9 L540.5 307.0 L540.8 308.0 L540.9 308.8 Z" fill="var(--tree-bark)" /> 
+                        <path d="M546.6 295.7 L546.1 296.0 L545.4 296.3 L544.7 296.7 L543.8 297.0 L542.9 297.4 L542.0 297.9 L541.0 298.3 L539.9 298.8 L538.9 299.2 L537.8 299.7 L536.7 300.1 L535.5 300.5 L534.4 301.0 L533.4 301.4 L532.3 301.7 L531.3 302.1 L530.3 302.4 L529.2 302.7 L528.2 303.0 L527.1 303.4 L525.9 303.7 L524.8 304.0 L523.7 304.2 L522.5 304.5 L521.4 304.8 L520.2 305.1 L519.1 305.3 L518.0 305.6 L516.9 305.8 L515.9 306.1 L514.8 306.3 L513.8 306.5 L512.8 306.7 L511.8 306.8 L510.8 307.0 L509.8 307.1 L508.8 307.3 L507.8 307.4 L506.8 307.5 L505.8 307.6 L504.9 307.7 L504.0 307.8 L503.2 307.9 L502.4 308.0 L501.7 308.1 L501.0 308.2 L500.4 308.3 L500.0 308.4 L500.0 309.6 L500.5 309.6 L501.1 309.6 L501.7 309.7 L502.5 309.7 L503.3 309.7 L504.1 309.7 L505.0 309.7 L505.9 309.7 L506.9 309.7 L507.9 309.7 L508.9 309.7 L510.0 309.7 L511.0 309.7 L512.1 309.6 L513.1 309.6 L514.2 309.5 L515.2 309.5 L516.3 309.4 L517.4 309.4 L518.5 309.3 L519.7 309.2 L520.8 309.1 L522.0 309.1 L523.2 309.0 L524.4 308.9 L525.6 308.8 L526.8 308.6 L528.0 308.5 L529.2 308.4 L530.4 308.2 L531.6 308.1 L532.7 307.9 L533.9 307.7 L535.0 307.5 L536.3 307.3 L537.5 307.0 L538.7 306.7 L539.9 306.4 L541.1 306.2 L542.3 305.9 L543.4 305.6 L544.5 305.3 L545.5 305.1 L546.5 304.8 L547.4 304.7 L548.2 304.5 L548.8 304.4 L549.4 304.3 Z" fill="var(--tree-bark)" /> 
+                        <path d="M546.8 303.8 L547.3 303.9 L548.0 304.0 L548.8 304.2 L549.6 304.4 L550.6 304.7 L551.6 304.9 L552.7 305.2 L553.8 305.5 L555.0 305.8 L556.2 306.1 L557.4 306.4 L558.6 306.7 L559.8 307.0 L561.0 307.2 L562.2 307.5 L563.4 307.7 L564.5 307.9 L565.6 308.0 L566.8 308.2 L568.0 308.4 L569.2 308.5 L570.4 308.6 L571.6 308.8 L572.8 308.9 L574.0 309.0 L575.2 309.1 L576.3 309.2 L577.5 309.3 L578.6 309.4 L579.7 309.4 L580.8 309.5 L581.9 309.5 L582.9 309.5 L584.0 309.5 L585.0 309.5 L586.1 309.5 L587.1 309.4 L588.2 309.4 L589.2 309.3 L590.2 309.2 L591.1 309.2 L592.0 309.1 L592.8 309.0 L593.6 308.9 L594.3 308.8 L595.0 308.7 L595.5 308.7 L596.0 308.6 L596.0 307.4 L595.5 307.3 L594.9 307.3 L594.3 307.3 L593.5 307.2 L592.8 307.2 L591.9 307.2 L591.0 307.2 L590.1 307.1 L589.1 307.1 L588.2 307.1 L587.1 307.0 L586.1 306.9 L585.1 306.9 L584.1 306.8 L583.1 306.6 L582.1 306.5 L581.1 306.3 L580.1 306.1 L579.1 305.9 L578.0 305.7 L576.9 305.5 L575.7 305.2 L574.6 305.0 L573.5 304.7 L572.3 304.4 L571.2 304.2 L570.1 303.9 L568.9 303.6 L567.8 303.3 L566.7 303.0 L565.7 302.6 L564.6 302.3 L563.6 302.0 L562.6 301.6 L561.5 301.2 L560.4 300.8 L559.2 300.4 L558.1 300.0 L557.0 299.5 L555.9 299.1 L554.9 298.7 L553.9 298.3 L552.9 297.8 L552.0 297.5 L551.2 297.1 L550.4 296.8 L549.8 296.5 L549.2 296.2 Z" fill="var(--tree-bark)" /> 
+                        <path d="M543.6 300.2 L543.5 300.5 L543.3 300.9 L543.0 301.3 L542.8 301.8 L542.4 302.3 L542.1 302.9 L541.7 303.5 L541.4 304.1 L541.0 304.7 L540.6 305.4 L540.2 306.0 L539.8 306.7 L539.5 307.3 L539.1 307.9 L538.8 308.5 L538.5 309.0 L538.3 309.6 L538.0 310.1 L537.8 310.7 L537.5 311.2 L537.3 311.8 L537.0 312.4 L536.8 312.9 L536.6 313.4 L536.4 313.9 L536.2 314.4 L536.0 314.9 L535.9 315.3 L535.8 315.7 L535.6 316.1 L535.5 316.4 L535.5 316.7 L536.5 317.3 L536.7 317.1 L536.9 316.8 L537.2 316.5 L537.5 316.2 L537.7 315.8 L538.0 315.4 L538.3 315.0 L538.7 314.6 L539.0 314.1 L539.3 313.7 L539.7 313.2 L540.0 312.7 L540.4 312.3 L540.7 311.8 L541.1 311.4 L541.5 311.0 L541.8 310.6 L542.2 310.1 L542.7 309.6 L543.2 309.1 L543.6 308.6 L544.1 308.1 L544.6 307.5 L545.1 307.0 L545.6 306.5 L546.1 306.0 L546.6 305.5 L547.0 305.1 L547.4 304.7 L547.8 304.4 L548.1 304.1 L548.4 303.8 Z" fill="var(--tree-bark)" /> 
+                        <path d="M547.8 303.7 L548.1 303.9 L548.4 304.2 L548.8 304.6 L549.2 305.0 L549.6 305.4 L550.1 305.9 L550.6 306.3 L551.1 306.9 L551.6 307.4 L552.1 307.9 L552.6 308.4 L553.0 309.0 L553.5 309.5 L554.0 310.0 L554.4 310.4 L554.8 310.8 L555.1 311.3 L555.4 311.7 L555.8 312.2 L556.1 312.6 L556.5 313.1 L556.8 313.6 L557.1 314.0 L557.5 314.5 L557.8 315.0 L558.1 315.4 L558.3 315.8 L558.6 316.2 L558.8 316.5 L559.1 316.8 L559.3 317.1 L559.5 317.3 L560.5 316.7 L560.4 316.4 L560.3 316.1 L560.2 315.8 L560.1 315.4 L559.9 314.9 L559.7 314.5 L559.5 314.0 L559.3 313.5 L559.1 313.0 L558.8 312.4 L558.6 311.9 L558.3 311.3 L558.1 310.8 L557.8 310.2 L557.5 309.7 L557.2 309.2 L557.0 308.6 L556.7 308.0 L556.3 307.4 L556.0 306.8 L555.6 306.2 L555.2 305.5 L554.8 304.9 L554.4 304.3 L554.1 303.7 L553.7 303.1 L553.4 302.5 L553.1 302.0 L552.8 301.5 L552.5 301.0 L552.3 300.7 L552.2 300.3 Z" fill="var(--tree-bark)" /> 
+                        <path d="M543.3 240.2 L542.2 239.9 L541.0 239.5 L539.5 239.1 L537.9 238.6 L536.1 238.0 L534.2 237.4 L532.2 236.8 L530.2 236.1 L528.0 235.5 L525.8 234.8 L523.6 234.1 L521.4 233.4 L519.2 232.7 L517.1 232.1 L515.0 231.5 L513.0 230.9 L511.0 230.4 L509.0 229.8 L507.0 229.3 L504.9 228.8 L502.9 228.2 L500.9 227.7 L498.8 227.2 L496.7 226.7 L494.7 226.2 L492.6 225.7 L490.6 225.2 L488.6 224.7 L486.5 224.2 L484.5 223.7 L482.5 223.3 L480.6 222.8 L478.6 222.4 L476.7 221.9 L474.8 221.5 L472.8 221.1 L470.9 220.7 L469.1 220.3 L467.2 219.9 L465.3 219.5 L463.4 219.1 L461.6 218.7 L459.7 218.4 L457.8 218.0 L455.9 217.6 L454.1 217.3 L452.2 216.9 L450.3 216.5 L448.4 216.2 L446.3 215.8 L444.2 215.4 L442.1 215.0 L439.9 214.7 L437.7 214.3 L435.5 213.9 L433.3 213.5 L431.2 213.2 L429.2 212.8 L427.3 212.5 L425.5 212.2 L423.9 212.0 L422.5 211.8 L421.2 211.6 L420.1 211.4 L419.9 212.6 L420.9 212.9 L422.2 213.2 L423.6 213.5 L425.2 213.9 L427.0 214.3 L428.9 214.7 L430.9 215.1 L432.9 215.6 L435.0 216.1 L437.2 216.6 L439.4 217.0 L441.5 217.5 L443.7 218.0 L445.8 218.5 L447.8 219.0 L449.7 219.5 L451.5 219.9 L453.4 220.4 L455.2 220.8 L457.1 221.3 L458.9 221.7 L460.8 222.2 L462.6 222.7 L464.5 223.1 L466.3 223.6 L468.1 224.1 L470.0 224.6 L471.9 225.1 L473.7 225.6 L475.6 226.1 L477.5 226.6 L479.4 227.2 L481.4 227.7 L483.3 228.3 L485.3 228.9 L487.3 229.5 L489.2 230.1 L491.2 230.7 L493.2 231.3 L495.3 232.0 L497.3 232.6 L499.3 233.2 L501.3 233.9 L503.3 234.5 L505.2 235.2 L507.2 235.8 L509.1 236.5 L511.0 237.1 L513.0 237.8 L515.0 238.5 L517.1 239.2 L519.3 239.9 L521.4 240.7 L523.6 241.5 L525.7 242.2 L527.8 243.0 L529.9 243.7 L531.8 244.5 L533.7 245.1 L535.4 245.8 L537.0 246.4 L538.4 246.9 L539.7 247.4 L540.7 247.8 Z" fill="var(--tree-bark)" /> 
+                        <path d="M542.9 218.8 L541.8 218.2 L540.4 217.4 L538.9 216.6 L537.1 215.7 L535.3 214.6 L533.2 213.5 L531.1 212.4 L528.9 211.1 L526.7 209.9 L524.4 208.6 L522.1 207.4 L519.9 206.1 L517.7 204.9 L515.5 203.7 L513.5 202.5 L511.5 201.4 L509.7 200.4 L507.8 199.3 L505.9 198.3 L504.1 197.3 L502.3 196.3 L500.5 195.3 L498.7 194.3 L496.9 193.3 L495.1 192.2 L493.3 191.2 L491.6 190.2 L489.9 189.3 L488.2 188.3 L486.5 187.3 L484.8 186.2 L483.1 185.2 L481.5 184.2 L479.9 183.2 L478.3 182.2 L476.7 181.2 L475.1 180.2 L473.6 179.2 L472.0 178.2 L470.5 177.2 L469.0 176.3 L467.5 175.2 L466.0 174.2 L464.6 173.2 L463.1 172.2 L461.7 171.1 L460.3 170.0 L458.9 168.9 L457.5 167.8 L456.0 166.6 L454.6 165.2 L453.1 163.9 L451.6 162.5 L450.1 161.1 L448.6 159.7 L447.2 158.3 L445.8 156.9 L444.5 155.6 L443.2 154.3 L442.1 153.1 L441.0 152.1 L440.0 151.1 L439.1 150.3 L438.4 149.6 L437.6 150.4 L438.3 151.1 L439.0 152.0 L439.9 153.0 L440.9 154.2 L442.0 155.4 L443.2 156.8 L444.5 158.2 L445.8 159.6 L447.2 161.1 L448.6 162.6 L450.0 164.1 L451.4 165.6 L452.9 167.1 L454.3 168.5 L455.7 169.8 L457.1 171.1 L458.5 172.3 L459.9 173.4 L461.3 174.6 L462.7 175.7 L464.1 176.8 L465.6 177.9 L467.0 179.0 L468.5 180.1 L470.0 181.2 L471.5 182.3 L473.0 183.4 L474.6 184.4 L476.1 185.5 L477.7 186.6 L479.3 187.7 L480.9 188.8 L482.5 189.9 L484.1 191.0 L485.8 192.1 L487.4 193.2 L489.1 194.3 L490.8 195.4 L492.5 196.5 L494.3 197.6 L496.0 198.7 L497.7 199.8 L499.5 201.0 L501.3 202.1 L503.1 203.2 L504.9 204.3 L506.7 205.4 L508.5 206.6 L510.4 207.8 L512.4 209.0 L514.5 210.3 L516.7 211.6 L518.9 213.0 L521.1 214.3 L523.4 215.7 L525.6 217.0 L527.7 218.3 L529.8 219.5 L531.7 220.7 L533.6 221.8 L535.3 222.9 L536.8 223.8 L538.1 224.6 L539.1 225.2 Z" fill="var(--tree-bark)" /> 
+                        <path d="M546.0 203.5 L545.2 202.9 L544.2 202.2 L543.1 201.4 L541.9 200.5 L540.5 199.5 L539.1 198.4 L537.5 197.3 L536.0 196.1 L534.4 194.9 L532.7 193.7 L531.1 192.4 L529.5 191.1 L527.9 189.9 L526.4 188.7 L524.9 187.5 L523.5 186.3 L522.2 185.2 L520.8 184.0 L519.5 182.9 L518.2 181.7 L516.8 180.5 L515.5 179.4 L514.2 178.2 L512.9 177.0 L511.6 175.8 L510.3 174.6 L509.1 173.3 L507.8 172.1 L506.6 170.9 L505.4 169.6 L504.2 168.4 L503.0 167.1 L501.8 165.8 L500.7 164.4 L499.4 163.0 L498.2 161.5 L497.0 159.9 L495.8 158.3 L494.6 156.8 L493.5 155.2 L492.4 153.7 L491.3 152.3 L490.3 150.9 L489.4 149.6 L488.5 148.4 L487.7 147.4 L487.0 146.5 L486.4 145.7 L485.6 146.3 L486.1 147.1 L486.7 148.1 L487.4 149.2 L488.2 150.4 L489.1 151.7 L490.0 153.2 L491.0 154.7 L492.0 156.3 L493.1 157.9 L494.2 159.5 L495.3 161.2 L496.5 162.8 L497.6 164.4 L498.7 166.0 L499.9 167.4 L501.0 168.9 L502.1 170.2 L503.2 171.6 L504.4 172.9 L505.5 174.3 L506.7 175.6 L507.9 176.9 L509.1 178.2 L510.4 179.5 L511.6 180.8 L512.9 182.1 L514.1 183.4 L515.4 184.7 L516.6 185.9 L517.9 187.2 L519.2 188.4 L520.5 189.7 L521.8 191.0 L523.3 192.3 L524.7 193.6 L526.3 195.0 L527.8 196.4 L529.4 197.7 L531.0 199.1 L532.5 200.4 L534.0 201.7 L535.5 202.9 L536.9 204.1 L538.1 205.2 L539.3 206.2 L540.3 207.1 L541.2 207.9 L542.0 208.5 Z" fill="var(--tree-bark)" /> 
+                        <path d="M551.5 190.0 L551.5 189.2 L551.4 188.2 L551.4 187.0 L551.4 185.7 L551.3 184.3 L551.3 182.8 L551.3 181.2 L551.2 179.5 L551.2 177.8 L551.2 176.1 L551.1 174.3 L551.1 172.5 L551.0 170.8 L550.9 169.1 L550.9 167.5 L550.7 165.9 L550.6 164.4 L550.5 162.9 L550.4 161.4 L550.2 159.9 L550.1 158.4 L549.9 156.9 L549.8 155.4 L549.6 153.9 L549.4 152.4 L549.3 150.9 L549.1 149.4 L548.9 147.9 L548.7 146.4 L548.4 144.9 L548.2 143.3 L548.0 141.8 L547.8 140.2 L547.5 138.6 L547.2 137.0 L547.0 135.3 L546.7 133.7 L546.4 132.0 L546.1 130.4 L545.8 128.7 L545.5 127.1 L545.2 125.4 L544.9 123.8 L544.6 122.2 L544.3 120.5 L544.0 118.9 L543.7 117.3 L543.4 115.8 L543.1 114.2 L542.7 112.5 L542.4 110.8 L542.1 109.1 L541.7 107.4 L541.4 105.6 L541.0 103.9 L540.7 102.2 L540.4 100.6 L540.1 99.0 L539.8 97.5 L539.5 96.1 L539.2 94.9 L539.0 93.7 L538.7 92.7 L538.5 91.9 L537.5 92.1 L537.5 92.9 L537.7 93.9 L537.8 95.1 L538.0 96.4 L538.2 97.8 L538.4 99.3 L538.6 100.9 L538.8 102.5 L539.0 104.2 L539.3 106.0 L539.5 107.7 L539.7 109.5 L540.0 111.2 L540.2 112.9 L540.4 114.6 L540.6 116.2 L540.8 117.8 L541.1 119.4 L541.3 121.0 L541.5 122.7 L541.8 124.3 L542.0 126.0 L542.2 127.6 L542.4 129.3 L542.7 130.9 L542.9 132.6 L543.1 134.2 L543.3 135.9 L543.5 137.5 L543.7 139.1 L543.9 140.7 L544.0 142.2 L544.2 143.8 L544.3 145.3 L544.4 146.9 L544.5 148.4 L544.6 149.9 L544.7 151.4 L544.8 152.8 L544.9 154.3 L545.0 155.8 L545.0 157.3 L545.1 158.7 L545.1 160.2 L545.2 161.7 L545.2 163.2 L545.2 164.6 L545.3 166.1 L545.3 167.6 L545.3 169.2 L545.2 170.9 L545.2 172.6 L545.2 174.3 L545.1 176.0 L545.1 177.8 L545.0 179.5 L544.9 181.1 L544.9 182.7 L544.8 184.2 L544.7 185.6 L544.7 186.9 L544.6 188.1 L544.6 189.1 L544.5 190.0 Z" fill="var(--tree-bark)" /> 
+                        <path d="M553.1 206.1 L554.0 205.5 L555.0 204.7 L556.2 203.9 L557.5 202.9 L558.9 201.9 L560.4 200.8 L562.1 199.6 L563.8 198.4 L565.5 197.2 L567.3 195.9 L569.1 194.6 L570.9 193.4 L572.7 192.1 L574.4 190.8 L576.1 189.6 L577.7 188.5 L579.3 187.3 L580.8 186.2 L582.4 185.1 L584.0 183.9 L585.6 182.8 L587.2 181.7 L588.8 180.5 L590.4 179.4 L592.0 178.2 L593.6 177.0 L595.3 175.8 L596.9 174.7 L598.5 173.5 L600.1 172.3 L601.7 171.0 L603.3 169.8 L604.9 168.6 L606.6 167.3 L608.2 166.1 L609.8 164.8 L611.5 163.5 L613.1 162.2 L614.8 160.9 L616.4 159.6 L618.0 158.3 L619.6 157.0 L621.2 155.7 L622.8 154.4 L624.4 153.1 L625.9 151.8 L627.5 150.4 L629.0 149.2 L630.5 147.8 L632.0 146.4 L633.6 145.0 L635.1 143.5 L636.7 142.0 L638.3 140.5 L639.8 139.0 L641.3 137.5 L642.8 136.1 L644.2 134.7 L645.5 133.4 L646.7 132.2 L647.8 131.0 L648.8 130.0 L649.7 129.1 L650.4 128.4 L649.6 127.6 L648.8 128.3 L647.9 129.1 L646.8 130.0 L645.6 131.0 L644.3 132.2 L642.9 133.4 L641.5 134.7 L639.9 136.0 L638.4 137.4 L636.7 138.8 L635.1 140.2 L633.5 141.6 L631.8 143.0 L630.2 144.3 L628.6 145.6 L627.0 146.8 L625.5 148.1 L623.9 149.3 L622.3 150.5 L620.7 151.7 L619.1 153.0 L617.4 154.2 L615.8 155.4 L614.1 156.6 L612.4 157.9 L610.7 159.1 L609.1 160.3 L607.4 161.5 L605.7 162.7 L604.0 163.9 L602.3 165.0 L600.7 166.2 L599.0 167.3 L597.4 168.4 L595.7 169.6 L594.1 170.7 L592.4 171.8 L590.8 172.9 L589.1 173.9 L587.5 175.0 L585.8 176.1 L584.1 177.2 L582.5 178.2 L580.8 179.3 L579.2 180.4 L577.6 181.4 L575.9 182.5 L574.3 183.5 L572.6 184.6 L570.9 185.7 L569.1 186.9 L567.3 188.1 L565.5 189.3 L563.6 190.5 L561.8 191.7 L560.0 192.8 L558.2 194.0 L556.6 195.0 L555.0 196.1 L553.5 197.0 L552.1 197.9 L550.9 198.7 L549.8 199.3 L548.9 199.9 Z" fill="var(--tree-bark)" /> 
+                        <path d="M551.9 231.6 L553.0 231.3 L554.3 230.9 L555.8 230.5 L557.4 230.0 L559.2 229.5 L561.2 228.9 L563.2 228.4 L565.3 227.8 L567.5 227.2 L569.8 226.5 L572.0 225.9 L574.2 225.3 L576.5 224.7 L578.6 224.1 L580.7 223.5 L582.7 222.9 L584.7 222.4 L586.7 221.8 L588.6 221.3 L590.6 220.7 L592.6 220.2 L594.6 219.6 L596.6 219.1 L598.6 218.5 L600.6 218.0 L602.6 217.5 L604.6 216.9 L606.6 216.4 L608.6 215.8 L610.6 215.3 L612.6 214.7 L614.5 214.2 L616.5 213.6 L618.5 213.1 L620.6 212.6 L622.6 212.0 L624.7 211.5 L626.7 211.0 L628.8 210.4 L630.8 209.9 L632.8 209.4 L634.8 208.8 L636.9 208.3 L638.8 207.7 L640.8 207.1 L642.7 206.5 L644.6 205.9 L646.4 205.3 L648.3 204.7 L650.1 204.0 L652.0 203.3 L653.9 202.5 L655.8 201.7 L657.7 201.0 L659.6 200.2 L661.4 199.4 L663.1 198.6 L664.7 197.9 L666.3 197.2 L667.8 196.5 L669.1 195.9 L670.3 195.4 L671.3 194.9 L672.2 194.5 L671.8 193.5 L670.9 193.8 L669.8 194.2 L668.5 194.6 L667.2 195.1 L665.7 195.7 L664.1 196.3 L662.4 196.9 L660.6 197.6 L658.8 198.3 L656.9 198.9 L655.0 199.6 L653.1 200.3 L651.2 200.9 L649.3 201.6 L647.4 202.1 L645.6 202.7 L643.8 203.2 L641.9 203.6 L640.0 204.1 L638.0 204.6 L636.0 205.0 L634.0 205.5 L632.0 205.9 L630.0 206.3 L627.9 206.8 L625.8 207.2 L623.8 207.6 L621.7 208.1 L619.6 208.5 L617.5 208.9 L615.5 209.4 L613.5 209.8 L611.4 210.3 L609.4 210.7 L607.4 211.2 L605.4 211.6 L603.4 212.1 L601.3 212.5 L599.3 213.0 L597.3 213.5 L595.3 213.9 L593.3 214.4 L591.3 214.8 L589.2 215.3 L587.2 215.7 L585.2 216.2 L583.2 216.6 L581.3 217.1 L579.2 217.6 L577.1 218.1 L574.9 218.6 L572.7 219.1 L570.4 219.6 L568.1 220.2 L565.9 220.7 L563.7 221.2 L561.5 221.7 L559.4 222.2 L557.5 222.7 L555.7 223.1 L554.0 223.5 L552.5 223.8 L551.2 224.1 L550.1 224.4 Z" fill="var(--tree-bark)" /> 
+                        <path d="M547.7 255.2 L548.7 255.3 L549.9 255.3 L551.2 255.4 L552.7 255.5 L554.3 255.6 L556.1 255.7 L557.9 255.9 L559.9 256.0 L561.9 256.1 L563.9 256.2 L566.0 256.3 L568.0 256.4 L570.1 256.5 L572.1 256.5 L574.1 256.5 L576.0 256.5 L577.8 256.4 L579.7 256.4 L581.6 256.3 L583.4 256.2 L585.3 256.0 L587.2 255.9 L589.1 255.8 L591.0 255.6 L592.9 255.4 L594.8 255.2 L596.7 255.0 L598.6 254.8 L600.5 254.5 L602.4 254.3 L604.3 254.0 L606.2 253.8 L608.1 253.5 L610.0 253.2 L611.9 252.9 L613.9 252.6 L615.8 252.3 L617.8 252.0 L619.7 251.6 L621.6 251.3 L623.5 250.9 L625.4 250.6 L627.3 250.2 L629.2 249.8 L631.0 249.4 L632.8 249.0 L634.5 248.6 L636.3 248.2 L638.0 247.7 L639.7 247.3 L641.5 246.7 L643.3 246.2 L645.0 245.7 L646.8 245.1 L648.5 244.6 L650.1 244.0 L651.7 243.5 L653.3 242.9 L654.7 242.4 L656.0 241.9 L657.3 241.5 L658.4 241.1 L659.3 240.8 L660.1 240.5 L659.9 239.5 L659.0 239.7 L658.0 240.0 L656.9 240.3 L655.6 240.7 L654.3 241.1 L652.8 241.5 L651.2 241.9 L649.6 242.4 L647.9 242.8 L646.2 243.3 L644.5 243.8 L642.7 244.2 L640.9 244.7 L639.2 245.1 L637.4 245.5 L635.7 245.8 L634.0 246.2 L632.3 246.5 L630.5 246.8 L628.7 247.1 L626.8 247.4 L624.9 247.8 L623.0 248.0 L621.1 248.3 L619.2 248.6 L617.3 248.9 L615.3 249.1 L613.4 249.4 L611.5 249.6 L609.6 249.8 L607.7 250.0 L605.8 250.2 L603.9 250.4 L602.0 250.5 L600.2 250.7 L598.3 250.8 L596.4 251.0 L594.5 251.1 L592.6 251.2 L590.7 251.3 L588.8 251.4 L587.0 251.4 L585.1 251.5 L583.3 251.5 L581.4 251.5 L579.6 251.5 L577.8 251.5 L576.0 251.5 L574.2 251.4 L572.3 251.3 L570.4 251.2 L568.4 251.1 L566.3 250.9 L564.3 250.7 L562.3 250.5 L560.4 250.3 L558.5 250.0 L556.6 249.8 L554.9 249.6 L553.3 249.4 L551.8 249.2 L550.4 249.0 L549.2 248.9 L548.3 248.8 Z" fill="var(--tree-bark)" />
+                      
+
+                      
+
+                      <g class="sakura-watercolor-canopy" filter="url(#sakuraWatercolor)">
+                        <ellipse class="deep" cx="548" cy="180" rx="90" ry="55" opacity=".4" filter="url(#sakuraHaze)" />
+                        <ellipse cx="450" cy="190" rx="60" ry="42" opacity=".48" />
+                        <ellipse cx="490" cy="160" rx="65" ry="44" opacity=".5" />
+                        <ellipse cx="530" cy="135" rx="62" ry="42" opacity=".52" />
+                        <ellipse cx="570" cy="130" rx="65" ry="44" opacity=".52" />
+                        <ellipse cx="610" cy="150" rx="62" ry="42" opacity=".48" />
+                        <ellipse cx="645" cy="180" rx="55" ry="40" opacity=".44" />
+                        <ellipse class="deep" cx="505" cy="200" rx="60" ry="34" opacity=".32" />
+                        <ellipse class="deep" cx="590" cy="200" rx="60" ry="34" opacity=".32" />
+                        <ellipse class="soft" cx="548" cy="112" rx="108" ry="62" opacity=".16" />
+                        <ellipse cx="610" cy="120" rx="62" ry="40" opacity=".13" />
+                      </g>
+
+                      <g class="sakura-base-blossoms" fill="#fffaf2" opacity=".9"></g>
+
+                      <g id="sakuraBuds" class="sakura-buds" fill="none">
+                        <path d="M538 90C534 86 534 81 537 78C541 81 541 87 538 90Z" />
+                        <path d="M486 144C482 140 482 135 485 132C489 135 489 141 486 144Z" />
+                        <path d="M438 148C434 144 434 139 437 136C441 139 441 145 438 148Z" />
+                        <path d="M420 210C416 206 416 201 419 198C423 201 423 207 420 210Z" />
+                        <path d="M650 126C646 122 646 117 649 114C653 117 653 123 650 126Z" />
+                        <path d="M672 192C668 188 668 183 671 180C675 183 675 189 672 192Z" />
+                        <path d="M660 238C656 234 656 229 659 226C663 229 663 235 660 238Z" />
+                        <path d="M507 211C503 207 503 202 506 199C510 202 510 208 507 211Z" />
+                        <path d="M589 226C585 222 585 217 588 214C592 217 592 223 589 226Z" />
+                      </g>
+
+                      <g id="sakuraBlossoms"></g>
+                    </g>
+                  </g>
+                </g>
+
+                <g class="sakura-falling" id="sakuraFalling" aria-hidden="true"></g>
+              </svg>
+              <div class="sakura-atmosphere" aria-hidden="true">
+                <span class="sakura-rays"></span>
+                <span class="sakura-mote"></span>
+                <span class="sakura-mote"></span>
+                <span class="sakura-mote"></span>
+                <span class="sakura-mote"></span>
+                <span class="sakura-mote"></span>
+                <span class="sakura-mote"></span>
+              </div>
+
+              <div class="sakura-daypart-wash" aria-hidden="true"></div>
+              <div class="sakura-moonlight" aria-hidden="true"></div>
+              <div class="sakura-night-sky" aria-hidden="true">
+                <span class="sakura-moon"></span>
+                <span class="sakura-star" style="--x: 18%; --y: 16%; --s: 2px; --d: 0s"></span>
+                <span class="sakura-star" style="--x: 31%; --y: 9%; --s: 1.5px; --d: 1.2s"></span>
+                <span class="sakura-star" style="--x: 47%; --y: 18%; --s: 2.4px; --d: 2.4s"></span>
+                <span class="sakura-star" style="--x: 62%; --y: 8%; --s: 1.6px; --d: .7s"></span>
+                <span class="sakura-star" style="--x: 73%; --y: 21%; --s: 2px; --d: 3.1s"></span>
+                <span class="sakura-star" style="--x: 86%; --y: 12%; --s: 1.4px; --d: 1.7s"></span>
+                <span class="sakura-star" style="--x: 24%; --y: 31%; --s: 1.3px; --d: 2.8s"></span>
+                <span class="sakura-star" style="--x: 39%; --y: 38%; --s: 1.8px; --d: .4s"></span>
+                <span class="sakura-star" style="--x: 56%; --y: 29%; --s: 1.2px; --d: 2.1s"></span>
+                <span class="sakura-star" style="--x: 69%; --y: 40%; --s: 1.7px; --d: 1.4s"></span>
+                <span class="sakura-star" style="--x: 82%; --y: 33%; --s: 2.2px; --d: 3.5s"></span>
+                <span class="sakura-star" style="--x: 12%; --y: 44%; --s: 1.2px; --d: 2.6s"></span>
+              </div>
+              <p class="sakura-whisper" id="sakuraWhisper">
+                花瓣会记得你认真生活的日子。
+              </p>
+            </div>
+
+            <aside class="sakura-dashboard" aria-label="樱花养成数据">
+              <button
+                class="sakura-panel-close"
+                id="sakuraPanelClose"
+                type="button"
+                aria-label="收起小树状况"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m6 6 12 12M18 6 6 18" />
+                </svg>
+              </button>
+              <div class="sakura-counts">
+                <div class="sakura-count sakura-count--petals">
+                  <span class="sakura-petal-mark" aria-hidden="true"></span>
+                  <strong id="sakuraPetals">0</strong>
+                  <small id="sakuraPetalLabel">花瓣</small>
+                </div>
+                <div class="sakura-count">
+                  <strong id="sakuraStreak">0</strong>
+                  <small>连续天数</small>
+                </div>
+              </div>
+
+              <div class="streak-repair-card" id="streakRepairCard" hidden>
+                <div>
+                  <strong>有一天签到断开了</strong>
+                  <p>写下那天的心情和原因，可以续上原来的连续天数。</p>
+                </div>
+                <button id="streakRepairButton" type="button">温柔补签</button>
+              </div>
+
+              <div class="sakura-growth">
+                <div class="sakura-growth-heading">
+                  <strong id="sakuraStageName">初生树苗</strong>
+                  <span id="sakuraNextStage">再完成 3 项开始生长</span>
+                </div>
+                <div
+                  class="sakura-growth-track"
+                  id="sakuraGrowthTrack"
+                  role="progressbar"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                  aria-label="樱花树成长进度"
+                >
+                  <div id="sakuraGrowthFill"></div>
+                </div>
+              </div>
+
+              <div class="sakura-wallet">
+                <div class="sakura-wallet-copy">
+                  <span>养成年轮金币</span>
+                  <button
+                    class="coin-help"
+                    type="button"
+                    aria-describedby="coinHelpTooltip"
+                    aria-label="查看金币获取方式"
+                  >
+                    ?
+                  </button>
+                  <span
+                    class="coin-tooltip"
+                    id="coinHelpTooltip"
+                    role="tooltip"
+                  >
+                    每天首次完成任务获得 10 金币；完成不同任务获得 2 金币；反复勾选同一任务不会重复获得。
+                  </span>
+                </div>
+                <strong id="sakuraCoins">0</strong>
+              </div>
+
+              <div class="sakura-footnote">
+                <span>累计完成 <strong id="sakuraCompletedCount">0</strong> 项</span>
+                <span>最长连续 <strong id="sakuraBestStreak">0</strong> 天</span>
+              </div>
+              <button
+                class="sakura-keep-button"
+                id="sakuraKeepButton"
+                type="button"
+                hidden
+              >
+                花已开满 · 留下这棵树
+              </button>
+              <a
+                class="sakura-poster-link"
+                href="assets/sakura-zine-poster.png"
+                target="_blank"
+                rel="noopener"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" />
+                </svg>
+                查看今日海报
+              </a>
+              <button
+                class="sakura-catalog-button"
+                id="treeCatalogButton"
+                type="button"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" />
+                </svg>
+                打开树种图签
+              </button>
+              <button
+                class="sakura-backpack-button"
+                id="treeBackpackButton"
+                type="button"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 8h12l-1 12H7L6 8Zm3 0V6a3 3 0 0 1 6 0v2" />
+                </svg>
+                树木背包
+                <span class="backpack-badge" id="backpackBadge">0</span>
+              </button>
+            </aside>
+          </section>
+
+          <section class="workspace-card" aria-labelledby="activeListTitle">
+            <div class="workspace-heading">
+              <div class="workspace-title">
+                <span class="list-overline" id="activeListOverline">今天的一页</span>
+                <h2 id="activeListTitle">今日清单</h2>
+                <p id="activeListSubtitle">把注意力留给真正重要的事。</p>
+              </div>
+              <button
+                class="date-stamp"
+                id="dateStampButton"
+                type="button"
+                title="选择要查看的日期"
+                aria-haspopup="dialog"
+              >
+                <span id="dateStampMonth">NOV</span>
+                <strong id="dateStampDay">01</strong>
+                <small id="dateStampWeekday">星期日</small>
+              </button>
+            </div>
+
+            <div class="date-rail-wrap" id="dateRailWrap" hidden>
+              <button
+                class="date-arrow"
+                id="previousDateButton"
+                type="button"
+                aria-label="前一个日期"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m15 6-6 6 6 6" />
+                </svg>
+              </button>
+              <div class="date-rail" id="dateRail" aria-label="日期选择"></div>
+              <button
+                class="date-arrow"
+                id="nextDateButton"
+                type="button"
+                aria-label="后一个日期"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m9 6 6 6-6 6" />
+                </svg>
+              </button>
+            </div>
+
+            <form class="task-composer" id="taskForm" autocomplete="off">
+              <div class="composer-main">
+                <span class="composer-plus" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </span>
+                <label class="sr-only" for="taskInput">添加新任务</label>
+                <input
+                  id="taskInput"
+                  name="task"
+                  type="text"
+                  maxlength="120"
+                  placeholder="写下一件今天想完成的小事…"
+                />
+                <button class="add-task-button" type="submit">
+                  添加任务
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 12h14M14 7l5 5-5 5" />
+                  </svg>
+                </button>
+              </div>
+              <div class="composer-tools">
+                <div class="composer-settings">
+                  <span class="composer-target" id="composerTarget">
+                    今日清单 · 今天
+                  </span>
+                  <fieldset class="priority-picker">
+                    <legend>优先级</legend>
+                    <label class="priority-option priority-option--red">
+                      <input type="radio" name="priority" value="red" />
+                      <span class="priority-dot"></span>
+                      <span>紧急</span>
+                    </label>
+                    <label class="priority-option priority-option--orange">
+                      <input type="radio" name="priority" value="orange" />
+                      <span class="priority-dot"></span>
+                      <span>重要</span>
+                    </label>
+                    <label class="priority-option priority-option--green">
+                      <input type="radio" name="priority" value="green" checked />
+                      <span class="priority-dot"></span>
+                      <span>日常</span>
+                    </label>
+                    <label class="priority-option priority-option--gray">
+                      <input type="radio" name="priority" value="gray" />
+                      <span class="priority-dot"></span>
+                      <span>稍后</span>
+                    </label>
+                  </fieldset>
+                </div>
+
+                <button class="import-link" id="importButton" type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 16V4M7 9l5-5 5 5M5 15v5h14v-5" />
+                  </svg>
+                  <span>从文件导入</span>
+                </button>
+              </div>
+            </form>
+
+            <div class="history-notice" id="historyNotice" hidden>
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                  <path d="M3 3v5h5M12 7v5l3 2" />
+                </svg>
+              </span>
+              <p><strong>历史清单为只读存档</strong>，可以回看完成情况；新安排请前往未来计划。</p>
+            </div>
+
+            <div class="task-toolbar">
+              <div class="task-filters" role="tablist" aria-label="筛选任务">
+                <button
+                  class="filter-button is-active"
+                  type="button"
+                  data-filter="all"
+                  role="tab"
+                  aria-selected="true"
+                >
+                  全部
+                  <span id="allCount">5</span>
+                </button>
+                <button
+                  class="filter-button"
+                  type="button"
+                  data-filter="pending"
+                  role="tab"
+                  aria-selected="false"
+                >
+                  待完成
+                  <span id="pendingCount">2</span>
+                </button>
+                <button
+                  class="filter-button"
+                  type="button"
+                  data-filter="done"
+                  role="tab"
+                  aria-selected="false"
+                >
+                  已完成
+                  <span id="doneCount">3</span>
+                </button>
+              </div>
+              <p class="visible-summary" id="visibleSummary">共 5 项任务</p>
+            </div>
+
+            <div class="task-list" id="taskList" aria-live="polite"></div>
+
+            <div class="empty-state" id="emptyState" hidden>
+              <span class="empty-illustration" aria-hidden="true">
+                <svg viewBox="0 0 72 72">
+                  <path
+                    d="M24 21h30a5 5 0 0 1 5 5v31a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V30a5 5 0 0 1 5-5h2"
+                  />
+                  <path d="M25 10h23v14H25zM25 36h23M25 45h16" />
+                  <path d="m42 55 4 4 8-9" />
+                </svg>
+              </span>
+              <h3 id="emptyTitle">还没有任务</h3>
+              <p id="emptyDescription">写下一件小事，让今天有一个轻松的起点。</p>
+              <button class="empty-action" id="emptyActionButton" type="button">
+                添加第一项任务
+              </button>
+            </div>
+
+            <div class="workspace-footer">
+              <p>
+                <span class="auto-save-dot" aria-hidden="true"></span>
+                已自动保存到本机
+              </p>
+              <button id="exportButton" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 4v12M7 11l5 5 5-5M5 19h14" />
+                </svg>
+                导出当前清单
+              </button>
+            </div>
+          </section>
+
+          <p class="page-signoff">
+            <span aria-hidden="true">✳</span>
+            一天不必完美，完成一件也值得庆祝
+          </p>
+        </main>
+      </div>
+    </div>
+
+    <nav class="app-tabbar" role="tablist" aria-label="App 主要页面">
+      <button
+        class="app-tab is-active"
+        id="sakuraTab"
+        type="button"
+        role="tab"
+        data-app-tab="tree"
+        aria-controls="sakuraGarden"
+        aria-selected="true"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 21v-7M12 15c-3.8 0-6-2.2-6-6 3.8 0 6 2.2 6 6ZM12 15c3.8 0 6-2.2 6-6-3.8 0-6 2.2-6 6ZM12 8V4" />
+        </svg>
+        <span>小树状况</span>
+      </button>
+      <button
+        class="app-tab"
+        id="tasksTab"
+        type="button"
+        role="tab"
+        data-app-tab="tasks"
+        aria-controls="taskWorkspace"
+        aria-selected="false"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 6h12M8 12h12M8 18h8M4 6h.1M4 12h.1M4 18h.1" />
+        </svg>
+        <span>设定今日任务</span>
+      </button>
+    </nav>
+
+    <div class="modal-backdrop" id="listModal" hidden>
+      <section
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="listModalTitle"
+      >
+        <button
+          class="modal-close icon-button"
+          type="button"
+          data-close-modal="listModal"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="modal-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <path d="M7 5h13l5 5v17H7zM20 5v6h5M12 16h8M12 21h8" />
+          </svg>
+        </div>
+        <p class="section-kicker">YOUR LIST</p>
+        <h2 id="listModalTitle">新建一个清单</h2>
+        <p class="modal-description" id="listModalDescription">
+          给清单一个容易记住的名字，比如「本周计划」。
+        </p>
+        <form id="listForm">
+          <label for="listNameInput">清单名称</label>
+          <input
+            id="listNameInput"
+            type="text"
+            maxlength="24"
+            placeholder="例如：旅行准备"
+            required
+          />
+          <div class="modal-actions">
+            <button
+              class="button-secondary"
+              type="button"
+              data-close-modal="listModal"
+            >
+              取消
+            </button>
+            <button class="button-primary" id="listSubmitButton" type="submit">
+              创建清单
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="manageListModal" hidden>
+      <section
+        class="modal modal--manage-list"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="manageListTitle"
+      >
+        <button
+          class="modal-close icon-button"
+          type="button"
+          data-close-modal="manageListModal"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="modal-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <path d="M7 5h13l5 5v17H7zM20 5v6h5M12 16h8M12 21h8" />
+          </svg>
+        </div>
+        <p class="section-kicker">MANAGE LIST</p>
+        <h2 id="manageListTitle">管理清单</h2>
+        <p class="modal-description" id="manageListDescription">
+          可以修改名称，或删除不再需要的清单。
+        </p>
+        <div class="manage-list-actions">
+          <button id="manageRenameButton" type="button">
+            <span class="manage-action-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="m4 16-.7 4.7L8 20l10.8-10.8a2.1 2.1 0 0 0-3-3L4 16Z" />
+                <path d="m14.5 7.5 3 3" />
+              </svg>
+            </span>
+            <span>
+              <strong>重命名清单</strong>
+              <small>换一个更贴合当前计划的名称</small>
+            </span>
+            <svg class="manage-action-chevron" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m9 6 6 6-6 6" />
+            </svg>
+          </button>
+          <button
+            id="manageDeleteButton"
+            class="manage-delete"
+            type="button"
+          >
+            <span class="manage-action-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" />
+              </svg>
+            </span>
+            <span>
+              <strong>删除这个清单</strong>
+              <small>删除前会再次确认，避免误操作</small>
+            </span>
+            <svg class="manage-action-chevron" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m9 6 6 6-6 6" />
+            </svg>
+          </button>
+        </div>
+        <button
+          class="manage-list-done"
+          type="button"
+          data-close-modal="manageListModal"
+        >
+          完成
+        </button>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="quoteModal" hidden>
+      <section
+        class="modal modal--quote"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quoteModalTitle"
+      >
+        <button
+          class="modal-close icon-button"
+          type="button"
+          data-close-modal="quoteModal"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="modal-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <path d="M16 3c.8 7.2 4.8 11.2 12 12-7.2.8-11.2 4.8-12 12-.8-7.2-4.8-11.2-12-12 7.2-.8 11.2-4.8 12-12Z" />
+          </svg>
+        </div>
+        <p class="section-kicker">DAILY NOTE</p>
+        <h2 id="quoteModalTitle">编辑今日寄语</h2>
+        <p class="modal-description">
+          选择系统默认，或写下只属于你的那句话。寄语会保存在当前浏览器。
+        </p>
+        <form id="quoteForm">
+          <fieldset class="quote-mode-options">
+            <legend>寄语来源</legend>
+            <label>
+              <input type="radio" name="quoteMode" value="default" checked />
+              <span>
+                <strong>系统默认</strong>
+                <small>使用日日为你准备的温柔提醒</small>
+              </span>
+            </label>
+            <label>
+              <input type="radio" name="quoteMode" value="custom" />
+              <span>
+                <strong>自定义寄语</strong>
+                <small>写下一句想每天看到的话</small>
+              </span>
+            </label>
+          </fieldset>
+          <label class="quote-input-label" for="quoteInput">自定义内容</label>
+          <textarea
+            id="quoteInput"
+            maxlength="100"
+            rows="3"
+            placeholder="例如：专注当下，把每一步走稳。"
+          ></textarea>
+          <div class="quote-input-meta">
+            <span>最多 100 个字符</span>
+            <span id="quoteCharacterCount">0 / 100</span>
+          </div>
+          <div class="modal-actions quote-modal-actions">
+            <button
+              class="button-secondary"
+              id="resetQuoteButton"
+              type="button"
+            >
+              使用系统默认
+            </button>
+            <button class="button-primary" type="submit">保存寄语</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="dateModal" hidden>
+      <section
+        class="modal modal--calendar"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dateModalTitle"
+      >
+        <button
+          class="modal-close icon-button"
+          type="button"
+          data-close-modal="dateModal"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="calendar-heading">
+          <div>
+            <p class="section-kicker">CHOOSE A DATE</p>
+            <h2 id="dateModalTitle">选择日期</h2>
+            <p>回看过去的记录，或为未来安排事情。</p>
+          </div>
+          <span class="calendar-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32">
+              <path d="M7 6h18v21H7zM11 3v6M21 3v6M7 12h18" />
+              <path d="M12 17h3M18 17h3M12 22h3" />
+            </svg>
+          </span>
+        </div>
+
+        <div class="calendar-month-bar">
+          <button
+            class="calendar-nav-button"
+            id="calendarPreviousMonth"
+            type="button"
+            aria-label="上个月"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m15 6-6 6 6 6" />
+            </svg>
+          </button>
+          <strong id="calendarMonthLabel">2026年 11月</strong>
+          <button
+            class="calendar-nav-button"
+            id="calendarNextMonth"
+            type="button"
+            aria-label="下个月"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m9 6 6 6-6 6" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="calendar-weekdays" aria-hidden="true">
+          <span>一</span><span>二</span><span>三</span><span>四</span>
+          <span>五</span><span>六</span><span>日</span>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+
+        <div class="calendar-selection">
+          <span>当前选择</span>
+          <strong id="calendarSelectedLabel">2026年11月1日 · 星期日</strong>
+        </div>
+        <div class="calendar-quick-actions">
+          <button type="button" data-quick-date="-1">昨天</button>
+          <button type="button" data-quick-date="0">今天</button>
+          <button type="button" data-quick-date="1">明天</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="importModal" hidden>
+      <section
+        class="modal modal--wide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="importModalTitle"
+      >
+        <button
+          class="modal-close icon-button"
+          type="button"
+          data-close-modal="importModal"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="modal-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <path d="M16 21V5M10 11l6-6 6 6M6 21v6h20v-6" />
+          </svg>
+        </div>
+        <p class="section-kicker">IMPORT TASKS</p>
+        <h2 id="importModalTitle">从文件导入任务</h2>
+        <p class="modal-description">
+          任务会添加到「<span id="importListName">今日清单</span>」，每一行会成为一项任务。
+        </p>
+
+        <button class="file-dropzone" id="fileDropZone" type="button">
+          <span class="dropzone-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32">
+              <path d="M16 21V6M10 12l6-6 6 6M7 21v5h18v-5" />
+            </svg>
+          </span>
+          <strong>将文件拖到这里，或点击选择</strong>
+          <span>支持 TXT、MD、CSV、JSON，最大 2 MB</span>
+        </button>
+        <input
+          id="fileInput"
+          type="file"
+          accept=".txt,.md,.csv,.json,text/plain,text/markdown,text/csv,application/json"
+          hidden
+        />
+
+        <div class="import-help">
+          <div>
+            <strong>每行一项，也可以带上优先级</strong>
+            <code>整理周报 | 紧急</code>
+            <code>- 阅读 30 分钟 | 日常</code>
+          </div>
+          <button class="text-link" id="downloadTemplateButton" type="button">
+            下载示例文件
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="confirmModal" hidden>
+      <section
+        class="modal modal--confirm"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirmTitle"
+        aria-describedby="confirmDescription"
+      >
+        <button
+          class="modal-close icon-button"
+          type="button"
+          data-close-modal="confirmModal"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="modal-icon modal-icon--danger" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <path d="M16 5 5 27h22L16 5ZM16 13v7M16 24v.1" />
+          </svg>
+        </div>
+        <h2 id="confirmTitle">删除这个清单？</h2>
+        <p class="modal-description" id="confirmDescription">
+          清单中的任务也会一起删除，此操作无法撤销。
+        </p>
+        <div class="modal-actions">
+          <button
+            class="button-secondary"
+            type="button"
+            data-close-modal="confirmModal"
+          >
+            先保留
+          </button>
+          <button class="button-danger" id="confirmDeleteButton" type="button">
+            确认删除
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <div
+      class="priority-menu"
+      id="priorityMenu"
+      role="menu"
+      aria-label="选择任务优先级"
+      hidden
+    ></div>
+
+    <div class="modal-backdrop" id="streakRepairModal" hidden>
+      <section
+        class="modal modal--streak-repair"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="streakRepairTitle"
+      >
+        <button
+          class="modal-close icon-button"
+          type="button"
+          data-close-modal="streakRepairModal"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="modal-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <path d="M16 4c.8 7.2 4.8 11.2 12 12-7.2.8-11.2 4.8-12 12-.8-7.2-4.8-11.2-12-12 7.2-.8 11.2-4.8 12-12Z" />
+          </svg>
+        </div>
+        <p class="section-kicker">GENTLE RETURN</p>
+        <h2 id="streakRepairTitle">把这一天轻轻补回来</h2>
+        <p class="modal-description">
+          中断一天并不会抹掉之前认真生活的痕迹。记录当时的感受与原因，就可以续回连续天数。
+        </p>
+        <form id="streakRepairForm">
+          <fieldset class="repair-mood-options">
+            <legend>那天的心情</legend>
+            <label><input type="radio" name="repairMood" value="疲惫" /><span>疲惫</span></label>
+            <label><input type="radio" name="repairMood" value="难过" /><span>难过</span></label>
+            <label><input type="radio" name="repairMood" value="焦虑" /><span>焦虑</span></label>
+            <label><input type="radio" name="repairMood" value="平静" /><span>平静</span></label>
+            <label><input type="radio" name="repairMood" value="还好" /><span>还好</span></label>
+          </fieldset>
+          <label class="repair-reason-label" for="streakRepairReason">发生了什么？</label>
+          <textarea
+            id="streakRepairReason"
+            maxlength="160"
+            rows="4"
+            placeholder="比如：那天工作太晚，实在没有精力完成任务。"
+            required
+          ></textarea>
+          <div class="repair-form-meta">
+            <span>只用于本机记录，不会上传。</span>
+            <span id="repairReasonCount">0 / 160</span>
+          </div>
+          <div class="modal-actions">
+            <button class="button-secondary" type="button" data-close-modal="streakRepairModal">稍后再说</button>
+            <button class="button-primary" id="streakRepairSubmit" type="submit">续上连续天数</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="treeCatalogModal" hidden>
+      <section
+        class="modal modal--tree-catalog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="treeCatalogTitle"
+      >
+        <button
+          class="modal-close icon-button"
+          type="button"
+          data-close-modal="treeCatalogModal"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="catalog-heading">
+          <div>
+            <p class="section-kicker">TREE COLLECTION</p>
+            <h2 id="treeCatalogTitle">树种图签</h2>
+            <p>持续照顾，或使用金币，认识更多树。</p>
+          </div>
+          <div class="catalog-wallet">
+            <span>金币</span>
+            <strong id="catalogCoinCount">0</strong>
+          </div>
+        </div>
+        <div class="tree-catalog-grid" id="treeCatalogGrid"></div>
+        <p class="catalog-note">
+          每天首次完成任务可获得金币，不同任务也会提供少量金币。连续坚持达到条件时，神秘树种会自动解锁。
+        </p>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="treeBackpackModal" hidden>
+      <section
+        class="modal modal--tree-backpack"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="treeBackpackTitle"
+      >
+        <button
+          class="modal-close icon-button"
+          type="button"
+          data-close-modal="treeBackpackModal"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="backpack-heading">
+          <div>
+            <p class="section-kicker">TREE BACKPACK</p>
+            <h2 id="treeBackpackTitle">树木背包</h2>
+            <p>开满的树会留在这里，成为你走过的春天。</p>
+          </div>
+          <div class="backpack-total">
+            <span>已留下</span>
+            <strong id="backpackCount">0</strong>
+          </div>
+        </div>
+        <div class="backpack-grid" id="treeBackpackGrid"></div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="installModal" hidden>
+      <section
+        class="modal modal--install"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="installModalTitle"
+      >
+        <button
+          class="modal-close icon-button"
+          type="button"
+          data-close-modal="installModal"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
+        <div class="install-app-preview">
+          <img src="icons/icon-192.png" alt="" width="72" height="72" />
+          <div>
+            <p class="section-kicker">RIRI APP</p>
+            <h2 id="installModalTitle">把日日装到手机上</h2>
+            <p>像普通 App 一样全屏启动，并支持离线使用。</p>
+          </div>
+        </div>
+
+        <button class="native-install-button" id="nativeInstallButton" type="button" hidden>
+          立即安装到这台设备
+        </button>
+
+        <div class="install-guide">
+          <article>
+            <span class="install-platform-icon install-platform-icon--apple" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M16.6 12.8c0-2.4 2-3.6 2.1-3.7a4.5 4.5 0 0 0-3.6-1.9c-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9a4.8 4.8 0 0 0-4 2.5c-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8 2.2-1.2 3-2.4a10.7 10.7 0 0 0 1.4-2.9 4.3 4.3 0 0 1-2.4-3.8ZM14 5.6A4.2 4.2 0 0 0 15 2a4.3 4.3 0 0 0-2.9 1.5 4 4 0 0 0-1 3.4A3.6 3.6 0 0 0 14 5.6Z" />
+              </svg>
+            </span>
+            <div>
+              <strong>iPhone / iPad</strong>
+              <p>使用 Safari 打开，点击底部“分享”，再选择“添加到主屏幕”。</p>
+            </div>
+          </article>
+          <article>
+            <span class="install-platform-icon install-platform-icon--android" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="m7 8-2-3M17 8l2-3M5 9h14v10H5zM8 19v2M16 19v2M8.5 13h.1M15.5 13h.1" />
+              </svg>
+            </span>
+            <div>
+              <strong>Android</strong>
+              <p>使用 Chrome 打开，点击右上角菜单，选择“安装应用”或“添加到主屏幕”。</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="install-download-row">
+          <div>
+            <strong>需要应用包？</strong>
+            <span>下载完整离线文件，用于部署或备份。</span>
+          </div>
+          <a href="日日清单-APP.zip" download>下载应用包</a>
+        </div>
+        <p class="install-note">
+          安装功能需要网站通过 HTTPS 或 localhost 打开；直接双击 HTML 文件时仍可正常使用，但浏览器不会提供安装入口。
+        </p>
+      </section>
+    </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
